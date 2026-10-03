@@ -118,14 +118,15 @@ async function send(text) {
     screen.getByLabelText("Review your words, or type instead"),
     { target: { value: text } },
   );
-  const c = screen.getByLabelText(
-    "I understand how this conversation is processed",
-  );
-  if (!c.checked) fireEvent.click(c);
-  fireEvent.click(screen.getByRole("button", { name: "Send to coach" }));
+  fireEvent.click(screen.getByRole("button", { name: "Send message" }));
+  const consent = screen.queryByRole("button", { name: "I understand — continue" });
+  if (consent) {
+    fireEvent.click(consent);
+    fireEvent.click(screen.getByRole("button", { name: "Send message" }));
+  }
 }
 async function confirm() {
-  fireEvent.click(screen.getByRole("button", { name: /^Confirm and/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Confirm", exact: true }));
 }
 test("FINISH UI: confirmed facts → 62.5% formula → chosen goal → dated action → logout/login remembers commitment (mock providers)", async () => {
   const s1 = {
@@ -167,7 +168,7 @@ test("FINISH UI: confirmed facts → 62.5% formula → chosen goal → dated act
   await send(
     "Customers have not paid; current business receivables are around eight lakh.",
   );
-  await screen.findByRole("heading", { name: "Review what I understood" });
+  await screen.findByRole("heading", { name: "I understood" });
   expect(state.saveCalls).toBe(0);
   await confirm();
   await screen.findByText("How much is overdue?");
@@ -239,14 +240,28 @@ test("blank answers and answers without processing consent never reach the coach
   state.signedIn = true;
   render(<App />);
   await screen.findByLabelText("Review your words, or type instead");
-  fireEvent.click(screen.getByRole("button", { name: "Send to coach" }));
-  await screen.findByText(
-    "Read the processing note and tick the box before sending.",
-  );
-  fireEvent.click(
-    screen.getByLabelText("I understand how this conversation is processed"),
-  );
-  fireEvent.click(screen.getByRole("button", { name: "Send to coach" }));
+  fireEvent.click(screen.getByRole("button", { name: "Send message" }));
+  await screen.findByRole("dialog", { name: "Before your first message" });
+  expect(state.replies).toHaveLength(0);
+  fireEvent.click(screen.getByRole("button", { name: "I understand — continue" }));
+  fireEvent.click(screen.getByRole("button", { name: "Send message" }));
   await screen.findByText("Speak or type an answer first.");
   expect(state.saveCalls).toBe(0);
+});
+
+ test("conversation has one composer, discreet privacy controls and explicit first-use consent", async () => {
+  state.signedIn = true;
+  render(<App />);
+  await screen.findByLabelText("Review your words, or type instead");
+  expect(screen.getAllByRole("textbox")).toHaveLength(1);
+  expect(screen.getByRole("button", { name: "Record voice message" })).toBeTruthy();
+  expect(screen.queryByRole("checkbox")).toBeNull();
+  expect(screen.getByText("Privacy & data")).toBeTruthy();
+  fireEvent.change(screen.getByLabelText("Review your words, or type instead"), { target: { value: "Fictional test concern" } });
+  fireEvent.click(screen.getByRole("button", { name: "Send message" }));
+  await screen.findByRole("dialog", { name: "Before your first message" });
+  expect(screen.getByLabelText("Review your words, or type instead").value).toBe("Fictional test concern");
+  expect(state.saveCalls).toBe(0);
+  fireEvent.click(screen.getByRole("button", { name: "Not now" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
 });

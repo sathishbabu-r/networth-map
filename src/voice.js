@@ -1,6 +1,21 @@
 let voiceConsent = false;
-export function attachVoice(container, input, next, { ready, transcribe }) {
+export function attachVoice(container, input, next, { ready, transcribe, compact = false }) {
   container.innerHTML = `<button type="button" class="microphone"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/></svg><span>Tap to speak</span></button><p class="voice-status" role="status" aria-live="polite">Speak naturally, then stop to see your words.</p><div class="recording-recovery" hidden><button type="button" class="secondary retry">Retry transcription</button> <button type="button" class="secondary discard">Discard recording</button></div><details><summary>Before using the microphone</summary><p>After you stop, your recording is sent through Convex to OpenAI to turn speech into text. This app does not save recordings. Failed recordings stay in this tab for retry until discarded or the page closes. Provider retention has not been verified. Review the words before sending them to the coach.</p><label class="voice-consent"><input type="checkbox"> I understand and want to use voice</label></details>`;
+  if (compact) {
+    container.classList.add("compact-voice");
+    container.querySelector("input").hidden = true;
+    container.querySelector(".voice-consent").hidden = true;
+    const accept = document.createElement("button");
+    accept.type = "button";
+    accept.textContent = "I understand — use voice";
+    accept.onclick = () => {
+      container.querySelector("input").checked = true;
+      voiceConsent = true;
+      container.querySelector("details").open = false;
+      button.click();
+    };
+    container.querySelector("details").append(accept);
+  }
   const button = container.querySelector(".microphone");
   const status = container.querySelector(".voice-status");
   const consent = container.querySelector("input");
@@ -35,6 +50,7 @@ export function attachVoice(container, input, next, { ready, transcribe }) {
     button.querySelector("span").textContent =
       value === "recording" ? "Tap to stop" : "Tap to speak";
     button.classList.toggle("listening", value === "recording");
+    if (compact) { button.setAttribute("aria-label", value === "recording" ? "Stop recording" : "Record voice message"); button.setAttribute("aria-pressed", String(value === "recording")); }
     recovery.hidden = value !== "failed" || !blob;
     container.querySelectorAll(".retry,.discard").forEach((control) => {
       control.disabled = busy;
@@ -93,8 +109,8 @@ export function attachVoice(container, input, next, { ready, transcribe }) {
     }
     if (!consent.checked) {
       container.querySelector("details").open = true;
-      status.textContent = "Read the note and tick the box before speaking.";
-      consent.focus();
+      status.textContent = "Review the voice disclosure before speaking.";
+      if (!compact) consent.focus();
       return;
     }
     setState("starting");
@@ -172,6 +188,7 @@ export function attachVoice(container, input, next, { ready, transcribe }) {
               "Could not start recording. Please try again or type below.";
     }
   };
+  if (compact) { button.setAttribute("aria-label", "Record voice message"); status.textContent = ""; }
   if (!supported) {
     button.disabled = true;
     status.textContent =

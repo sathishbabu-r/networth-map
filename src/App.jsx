@@ -21,7 +21,7 @@ const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
-const opening = "What's the one financial issue on your mind right now?";
+const opening = "What’s on your mind financially?";
 function factValue(f) {
   return f.kind === "unknown"
     ? "I don't know"
@@ -137,7 +137,7 @@ function Snapshot({ content, complete }) {
     </div>
   );
 }
-function Proposal({ proposal, setProposal, onConfirm, onCancel, busy }) {
+function Proposal({ proposal, setProposal, onConfirm, onCancel, busy, saved }) {
   const [editing, setEditing] = useState(false);
   const change = (key, value) =>
     setProposal({
@@ -145,12 +145,13 @@ function Proposal({ proposal, setProposal, onConfirm, onCancel, busy }) {
       content: { ...proposal.content, [key]: value },
     });
   const c = proposal.content;
+  const changedFacts = c.facts.filter(f => !saved?.facts.some(old => JSON.stringify(old) === JSON.stringify(f)));
+  const changed = key => JSON.stringify(c[key]) !== JSON.stringify(saved?.[key]);
   return (
     <div className="proposal" aria-label="Review what I understood">
-      <h2>Review what I understood</h2>
+      <h2>I understood</h2>
       <p>
-        Only confirm information that matches what you meant. Estimates stay
-        estimates.
+        Review before saving. Estimates stay estimates.
       </p>
       {editing ? (
         <div>
@@ -431,10 +432,8 @@ function Proposal({ proposal, setProposal, onConfirm, onCancel, busy }) {
         </div>
       ) : (
         <div>
-          <p>
-            <strong>Issue:</strong> {c.concern}
-          </p>
-          {c.facts.map((f) => (
+          {changed("concern") && <p>{c.concern}</p>}
+          {changedFacts.map((f) => (
             <div className="fact" key={f.key + f.scope + f.period}>
               <strong>
                 {f.label}: {factValue(f)}
@@ -446,20 +445,20 @@ function Proposal({ proposal, setProposal, onConfirm, onCancel, busy }) {
               {f.note && <small>{f.note}</small>}
             </div>
           ))}
-          {c.goal && (
+          {c.goal && changed("goal") && (
             <p>
               <strong>Your goal:</strong> {c.goal.text}
               {c.goal.targetDate && ` · ${c.goal.targetDate}`}
             </p>
           )}
-          {c.action && (
+          {c.action && changed("action") && (
             <p>
               <strong>Your action:</strong> {c.action.text}
               <br />
               By {c.action.dueDate}
             </p>
           )}
-          {c.outcome && (
+          {c.outcome && changed("outcome") && (
             <>
               <p>
                 <strong>Action:</strong>{" "}
@@ -489,11 +488,7 @@ function Proposal({ proposal, setProposal, onConfirm, onCancel, busy }) {
           {editing ? "Finish editing" : "Edit"}
         </button>
         <button disabled={busy} onClick={onConfirm}>
-          {busy
-            ? "Saving…"
-            : c.action
-              ? "Confirm and commit"
-              : "Confirm and save"}
+          {busy ? "Saving…" : "Confirm"}
         </button>
       </div>
       <button className="text-button" disabled={busy} onClick={onCancel}>
@@ -502,60 +497,47 @@ function Proposal({ proposal, setProposal, onConfirm, onCancel, busy }) {
     </div>
   );
 }
-function Composer({ onSend, busy, consent, setConsent }) {
-  const input = useRef(),
-    send = useRef(),
-    voiceBox = useRef(),
-    voice = useRef();
-  const ready = useAction(api.speech.ready),
-    transcribe = useAction(api.speech.transcribe);
+function Composer({ onSend, busy, consent, setConsent, reviewPending, children }) {
+  const input = useRef(), send = useRef(), voiceBox = useRef(), voice = useRef();
+  const [disclosure, setDisclosure] = useState(false);
+  const ready = useAction(api.speech.ready), transcribe = useAction(api.speech.transcribe);
   useEffect(() => {
     voice.current = attachVoice(voiceBox.current, input.current, send.current, {
-      ready: () => ready({}),
-      transcribe,
+      ready: () => ready({}), transcribe, compact: true,
     });
     return () => voice.current?.dispose();
   }, [ready, transcribe]);
-  return (
-    <form
-      onSubmit={async (e) => {
-        e.preventDefault();
-        if (busy) return;
-        const ok = await onSend(input.current.value.trim());
-        if (ok) {
-          input.current.value = "";
-          voice.current.clearRecording();
-        }
-        input.current.focus();
-      }}
-    >
-      <fieldset disabled={busy} className="composer">
-        <div ref={voiceBox} />
-        <label htmlFor="answer">Review your words, or type instead</label>
-        <textarea
-          ref={input}
-          id="answer"
-          rows="3"
-          maxLength="5000"
-          placeholder="Tell me what’s on your mind…"
-        />
-        <label className="voice-consent">
-          <input
-            type="checkbox"
-            checked={consent}
-            onChange={(e) => setConsent(e.target.checked)}
-          />{" "}
-          I understand how this conversation is processed
-        </label>
-        <div className="controls">
-          <button type="submit" ref={send}>
-            {busy ? "Your coach is thinking…" : "Send to coach"}
+  async function submit() {
+    if (busy || reviewPending || input.current.readOnly) return;
+    if (!consent) { setDisclosure(true); return; }
+    const ok = await onSend(input.current.value.trim());
+    if (ok) { input.current.value = ""; voice.current.clearRecording(); }
+    input.current.focus();
+  }
+  return <div className="composer-dock">
+    {disclosure && <div className="first-use" role="dialog" aria-label="Before your first message">
+      <h2>Before we talk</h2>
+      <p>Your answers are processed by Convex and the AI provider. Only information you confirm is saved. This app does not retain full conversations or raw audio. Provider retention has not been verified.</p>
+      <button onClick={() => { setConsent(true); setDisclosure(false); input.current.focus(); }}>I understand — continue</button>
+      <button className="text-button" onClick={() => setDisclosure(false)}>Not now</button>
+    </div>}
+    <form onSubmit={e => { e.preventDefault(); void submit(); }}>
+      <fieldset disabled={busy || reviewPending} className="composer">
+        <label className="sr-only" htmlFor="answer">Review your words, or type instead</label>
+        <textarea ref={input} id="answer" rows="2" maxLength="5000" placeholder="Message My Money Huddle…"
+          onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void submit(); } }} />
+        <div className="composer-actions"><div ref={voiceBox} className="voice-inline" />
+          <button type="submit" ref={send} className="send-icon" aria-label={busy ? "Your coach is thinking" : "Send message"}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6" /></svg>
           </button>
         </div>
       </fieldset>
     </form>
-  );
+    {(busy || reviewPending) && <p className="composer-hint">{busy ? "Money Huddle is thinking…" : "Confirm or edit the details above to continue."}</p>}
+    {children}
+  </div>;
 }
+
 function Huddle() {
   const saved = useQuery(api.huddles.current, {});
   const reply = useAction(api.coach.reply),
@@ -602,7 +584,7 @@ function Huddle() {
     setError("");
     setNotice("");
     if (!consent) {
-      setError("Read the processing note and tick the box before sending.");
+      setError("Review the first-use disclosure before sending.");
       return false;
     }
     if (!text) {
@@ -710,31 +692,8 @@ function Huddle() {
     return <p role="status">Loading your saved Huddle…</p>;
   return (
     <main className="conversation">
-      <aside>
-        <h1>Let’s talk about your money.</h1>
-        <p>One issue. One goal you choose. One practical next step.</p>
-        {saved && (
-          <Snapshot content={saved.content} complete={saved.complete} />
-        )}
-      </aside>
-      <section aria-label="Conversation with your coach">
-        <h2>
-          {saved?.complete ? "Your next Money Huddle" : "Your Money Huddle"}
-        </h2>
-        <div className="processing-note">
-          <details>
-            <summary>How your information is processed and saved</summary>
-            <p>
-              Your answers are processed by Convex and the AI provider. Voice
-              recordings are sent through Convex to OpenAI for transcription. We
-              save only the financial context and commitments you confirm, along
-              with previous confirmed versions, in your account. This app does
-              not save raw audio or the full conversation. Unsaved conversation
-              and drafts disappear when this tab closes. Provider retention has
-              not been verified. Export or delete your saved Huddle below.
-            </p>
-          </details>
-        </div>
+      <section className="thread" aria-label="Conversation with your coach">
+        <h1 className="thread-title">My Money Huddle</h1>
         <div id="messages" ref={log} role="log" aria-live="polite">
           {messages.map((m, i) => (
             <article key={i} className={"message " + m.role}>
@@ -748,6 +707,7 @@ function Huddle() {
               </p>
             </article>
           ))}
+        {proposal && <Proposal proposal={proposal} setProposal={setProposal} busy={busy} saved={saved?.content} onConfirm={confirm} onCancel={() => { setProposal(null); setMessages([...messages, { role: "assistant", content: "What should I correct?" }]); }} />}
         </div>
         {error && (
           <p className="error" role="alert">
@@ -755,50 +715,15 @@ function Huddle() {
           </p>
         )}
         {notice && <p role="status">{notice}</p>}
-        {proposal ? (
-          <Proposal
-            proposal={proposal}
-            setProposal={setProposal}
-            busy={busy}
-            onConfirm={confirm}
-            onCancel={() => {
-              setProposal(null);
-              setMessages([
-                ...messages,
-                {
-                  role: "assistant",
-                  content:
-                    "Nothing from that proposal was saved. What should I correct?",
-                },
-              ]);
-            }}
-          />
-        ) : showSummary && saved ? (
-          <>
-            <Snapshot content={saved.content} complete={saved.complete} />
-            <button
-              onClick={() => {
-                setShowSummary(false);
-                setMessages([
-                  ...messages,
-                  {
-                    role: "assistant",
-                    content: `Your commitment is ${saved.content.action.text} by ${saved.content.action.dueDate}. What would you like to discuss?`,
-                  },
-                ]);
-              }}
-            >
-              Continue the conversation
-            </button>
-          </>
-        ) : (
-          <Composer
-            onSend={onSend}
-            busy={busy}
-            consent={consent}
-            setConsent={setConsent}
-          />
-        )}
+        {saved && <details className="saved-summary" open={showSummary || undefined}>
+          <summary>{showSummary ? "Your Huddle summary" : "Saved Huddle"}</summary>
+          <Snapshot content={saved.content} complete={saved.complete} />
+        </details>}
+        <Composer onSend={async text => { setShowSummary(false); return onSend(text); }} busy={busy} consent={consent} setConsent={setConsent} reviewPending={Boolean(proposal)}>
+        <details className="privacy-data">
+          <summary>You choose what gets saved · <span>Privacy &amp; data</span></summary>
+          <p>Your answers are processed by Convex and the AI provider. Voice recordings are sent through Convex to OpenAI for transcription. We save only financial context and commitments you confirm, along with previous confirmed versions, in your account. This app does not save raw audio or the full conversation. Unsaved conversation and drafts disappear when this tab closes. Provider retention has not been verified.</p>
+          {consent && <button className="text-button" onClick={() => setConsent(false)}>Withdraw conversation consent</button>}
         <div className="data-controls">
           {saved && (
             <>
@@ -849,6 +774,8 @@ function Huddle() {
             </div>
           )}
         </div>
+        </details>
+        </Composer>
       </section>
     </main>
   );
@@ -965,7 +892,7 @@ export function App() {
           </section>
         </main>
       )}
-      <footer>
+      <footer className={isAuthenticated ? "sr-only" : undefined}>
         You choose your goal and action. Calculations use confirmed figures;
         estimates remain visible.
       </footer>
