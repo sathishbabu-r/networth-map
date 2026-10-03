@@ -8,8 +8,12 @@
  * @module
  */
 
+import type * as auth from "../auth.js";
 import type * as coach from "../coach.js";
+import type * as http from "../http.js";
+import type * as huddles from "../huddles.js";
 import type * as speech from "../speech.js";
+import type * as validators from "../validators.js";
 
 import type {
   ApiFromModules,
@@ -18,8 +22,12 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  auth: typeof auth;
   coach: typeof coach;
+  http: typeof http;
+  huddles: typeof huddles;
   speech: typeof speech;
+  validators: typeof validators;
 }>;
 
 /**
@@ -50,4 +58,5 @@ export declare const internal: FilterApi<
 
 export declare const components: {
   agent: import("@convex-dev/agent/_generated/component.js").ComponentApi<"agent">;
+  staticHosting: import("@convex-dev/static-hosting/_generated/component.js").ComponentApi<"staticHosting">;
 };
