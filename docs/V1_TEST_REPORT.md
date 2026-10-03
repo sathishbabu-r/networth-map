@@ -6,7 +6,7 @@ Scope: conversational Huddle, typed/push-to-talk answers, confirmed financial sn
 
 ## Passed
 
-- `npm test`: 25 automated checks (15 financial/confirmation/recording checks, 5 Convex data-access checks, 3 interface flow checks and 2 speech-action checks).
+- `npm test`: 28 automated checks (18 financial/confirmation/recording/provider-error checks, 5 Convex data-access checks, 3 interface flow checks and 2 speech-action checks).
 - `npx tsc --noEmit -p convex/tsconfig.json`: backend type checking.
 - `npm run build`: frontend production build.
 - `npx convex dev --once`: backend compiles and uploads to the existing development deployment.
@@ -20,10 +20,9 @@ The interface flow test covers simulated Google sign-in → chat → review with
 
 These automated tests are not proof of real Google authorization, AI conversation quality, real microphone transcription, a real logout/login round trip, the ≤15-minute independent pilot, or production hosting.
 
-The development deployment reports `google: false`, `coach: false`, `speech: false`. Missing configuration:
+The Google and OpenAI credentials are now configured; the development setup reports `google: true`, `coach: true`, `speech: true`. The builder completed real Google login, and the signed-in conversation screen was inspected in Chrome. These flags indicate configuration, not successful AI requests.
 
-- `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET`: Google login connection.
-- `OPENAI_API_KEY`: speech-to-text and the coach fallback while Convex AI Gateway is unavailable.
+A real fictional coach request failed. A minimal backend OpenAI request returned HTTP 429 with code `credit_balance_exhausted`: the OpenAI organization's API credit balance is exhausted. No confirmed financial snapshot was saved during these checks. The error handling now distinguishes this billing condition from temporary request limits without exposing the key, request headers or financial conversation. Real coach, push-to-talk transcription, logout/login with confirmed context and production deployment remain pending API credit and the remaining browser checks.
 
 Signing keys and the local `SITE_URL` are configured in the development deployment. No provider secrets are committed to the repository. Raw audio and full conversations are not saved in the app database; only reviewed, confirmed context and its change history are saved.
 

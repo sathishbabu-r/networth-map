@@ -1,3 +1,4 @@
+import {providerFailure} from "../shared/provider-error.mjs";
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
@@ -57,7 +58,9 @@ export const transcribe = action({
           signal: AbortSignal.timeout(45000),
         },
       );
-      if (!response.ok)
+      if (!response.ok) {
+        const failure = providerFailure({statusCode:response.status,responseBody:await response.text()});
+        if (["insufficient_quota", "credit_balance_exhausted"].includes(failure.code ?? "")) return {text:"",error:failure.message};
         return {
           text: "",
           error:
@@ -67,6 +70,7 @@ export const transcribe = action({
                 ? "The speech service is busy or its billing limit was reached. Please retry shortly."
                 : "Speech-to-text could not finish. Retry or type instead.",
         };
+      }
       const result = await response.json();
       const text = typeof result.text === "string" ? result.text.trim() : "";
       return text

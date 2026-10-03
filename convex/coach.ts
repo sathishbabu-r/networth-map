@@ -11,6 +11,7 @@ import { api, components } from "./_generated/api";
 import { content } from "./validators";
 import { validateContent } from "../shared/huddle.mjs";
 import { calculateInsights } from "../shared/financial.mjs";
+import { providerFailure } from "../shared/provider-error.mjs";
 import research from "../docs/RESEARCH_SOURCES.json";
 const factSchema = z.object({
   key: z.string(),
@@ -221,10 +222,10 @@ export const reply = action({
         revision: saved?.revision ?? 0,
         error: null,
       };
-    } catch {
-      return fail(
-        "The coach could not complete its reply. Your answer is still here; please retry.",
-      );
+    } catch (error) {
+      const failure = providerFailure(error);
+      console.warn("Huddle coach diagnostic", JSON.stringify({status:failure.status,code:failure.code,name:error instanceof Error && /^[A-Za-z_]+$/.test(error.name)?error.name:"UnknownError"}));
+      return fail(failure.message);
     }
   },
 });
