@@ -1,0 +1,1226 @@
+{
+  "checked_on": "2026-10-03",
+  "scope": "75 selected subject entries; one narrow claim per supported entry, not all prior conversation claims.",
+  "status_definition": {
+    "supported_limited": "Source supports the stated attribution; does not establish truth of all promotional or empirical claims.",
+    "withheld": "No adequate reviewed evidence for a coach principle."
+  },
+  "runtime_status": "Documentation only. No retrieval system or enforcement is implemented.",
+  "entries": [
+    {
+      "id": "F01",
+      "category": "firm",
+      "name": "UBS",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Wealth planning services | UBS United States of America",
+        "url": "https://www.ubs.com/us/en/wealth-management/our-solutions/planning/wealth-planning.html"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes customised planning around financial goals and family needs.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F02",
+      "category": "firm",
+      "name": "Morgan Stanley",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Goals Planning | Morgan Stanley",
+        "url": "https://www.morganstanley.com/what-we-do/wealth-management/morgan-stanley-goals-planning-system?cid=whmt-smfa-gps2.0-7444"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes discovery of needs, lifestyle and family before goals-based planning.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F03",
+      "category": "firm",
+      "name": "JPMorgan",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Goals - Based Planning | J.P. Morgan Private Bank EMEA EN",
+        "url": "https://privatebank.jpmorgan.com/eur/en/insights/wealth-planning/goal-based-planning"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Organises goals-based planning around cash, spending, legacy and growth.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F04",
+      "category": "firm",
+      "name": "Merrill / Bank of America",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Banking Products & Services to Manage Your Finances",
+        "url": "https://www.ml.com/solutions/manage-finances.html"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes financial solutions around personal goals rather than one number.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F05",
+      "category": "firm",
+      "name": "Goldman Sachs",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Careers in Wealth Management | Goldman Sachs",
+        "url": "https://www.goldmansachs.com/careers/our-firm/wealth-management/"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes financial planning and broader wealth advice for several client groups.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F06",
+      "category": "firm",
+      "name": "HSBC",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Wealth Management Planning Services | HSBC Private Bank",
+        "url": "https://www.privatebanking.hsbc.com/wealth-planning/"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes tailored family wealth planning for long-term ambitions.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F07",
+      "category": "firm",
+      "name": "Julius Baer",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Wealth Planning | Julius Baer",
+        "url": "https://www.juliusbaer.com/in/en/our-solutions/wealth-planning/"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes planning for children, retirement, tax questions and succession.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F08",
+      "category": "firm",
+      "name": "Citi",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Private banking wealth and estate planning | Citi Private Bank",
+        "url": "https://www.privatebank.citibank.com/we-offer/trust"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes wealth preservation planning alongside independent legal and tax advisers.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F09",
+      "category": "firm",
+      "name": "Lombard Odier",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Wealth planning – bespoke, holistic solutions | Lombard Odier",
+        "url": "https://www.lombardodier.com/en/home/private-clients/wealth-planning.html"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes assessing personal, family and professional circumstances together.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F10",
+      "category": "firm",
+      "name": "BNP Paribas",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "A leading Private Bank I BNP Paribas Wealth Management International",
+        "url": "https://wealthmanagement.bnpparibas/en.html"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes planning, financing and diversification services for entrepreneurs and families.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F11",
+      "category": "firm",
+      "name": "Pictet",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Wealth Management services in the UK | Pictet",
+        "url": "https://www.pictet.com/uk/en/wealth-management"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes listening to individual circumstances rather than a product-led approach.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F12",
+      "category": "firm",
+      "name": "LGT",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Wealth planning for families | LGT",
+        "url": "https://www.lgt.com/global-en/private-banking/investment-solutions/wealth-planning"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes family planning where assets are tied up in a business or spread across countries.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F13",
+      "category": "firm",
+      "name": "EFG",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Wealth Planning - EFG International",
+        "url": "https://www.efginternational.com/private-banking/wealth-services/wealth-planning.html"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes considering wealth structure, risk appetite and objectives with trusted advisers.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F14",
+      "category": "firm",
+      "name": "Vontobel",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Plan your wealth | Vontobel",
+        "url": "https://www.vontobel.com/en-us/private-clients/wealth-services/"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes planning based on financial and family circumstances and personal goals.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F15",
+      "category": "firm",
+      "name": "Deutsche Bank",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Financial planning for a longer life",
+        "url": "https://ww.deutsche-bank.com/what-next/entrepreneurial-success/ageing/financial-planning-longer-life/index?kid=wn.stageGHP.longer-life.en&language_id=1"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Advises reviewing plans when life and goals change.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F16",
+      "category": "firm",
+      "name": "Barclays",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Wealth Planning | Wealth Planning Services | Barclays",
+        "url": "https://privatebank.barclays.com/private-bank-wm/products-services/wealth-planning/"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Lists real assets, ownership, cash, debts, objectives and succession in planning.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F17",
+      "category": "firm",
+      "name": "Société Générale",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Votre patrimoine : valorisation & transmission - Societe Generale Private Banking",
+        "url": "https://www.privatebanking.societegenerale.com/fr/home-work/votre-patrimoine-valorisation-transmission/"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes financial planning, investments, tax, succession and philanthropy together.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F18",
+      "category": "firm",
+      "name": "Santander",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Wealth Management for high net worth individuals",
+        "url": "https://www.santanderprivatebanking.com/our-services/wealth-management-for-high-net-worth-individuals"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes life-stage planning and family-business governance.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F19",
+      "category": "firm",
+      "name": "RBC",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Financial planning – RBC Wealth Management",
+        "url": "https://www.rbcwealthmanagement.com/rbcds/en/find-a-solution/financial-planning"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes a personalised plan that can evolve with circumstances.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F20",
+      "category": "firm",
+      "name": "Standard Chartered",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Private Banking | Standard Chartered",
+        "url": "https://www.sc.com/en/wealth-retail-banking/private-banking/"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes tailored support for entrepreneurial families and their wealth.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F21",
+      "category": "firm",
+      "name": "DBS",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "DBS Private Bank: Global Private Banking Services For You",
+        "url": "https://www.dbs.com/private-banking/default.page"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes bespoke planning including liquidity, succession and family legacy.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F22",
+      "category": "firm",
+      "name": "Bank of Singapore",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Individuals | Bank of Singapore",
+        "url": "https://www.bankofsingapore.com/solutions/individuals.html"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes succession planning and services with different levels of client involvement.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F23",
+      "category": "firm",
+      "name": "Northern Trust",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Wealth Planning Advisory Services | Northern Trust",
+        "url": "https://www.northerntrust.com/united-states/what-we-do/wealth-management/products-services/wealth-planning-advisory-services"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes coordinating financial, tax, governance and philanthropy expertise.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F24",
+      "category": "firm",
+      "name": "BNY",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Wealth Planning Solutions for UHNW Families | BNY",
+        "url": "https://www.bny.com/wealth/global/en/solutions/wealth-planning.html"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Frames planning around desired lifestyle, legacy and a long-term vision.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "F25",
+      "category": "firm",
+      "name": "Wells Fargo",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Wealth Management Services | Wells Fargo",
+        "url": "https://www.wellsfargo.com/wealth-management-services/"
+      },
+      "evidence_type": "First-party service description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes personalised planning and a team of specialists around client objectives.",
+      "limit": "Supports what the firm describes, not independent service quality, returns, ranking or private-app usability. Services and rules vary by country.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A01",
+      "category": "author",
+      "name": "Tony Robbins",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Re-Awaken the Giant Within, CANI passages",
+        "url": "https://go.tonyrobbins.com/hubfs/Re-Awaken_the_Giant_Within_Highres.pdf?hsLang=en"
+      },
+      "evidence_type": "Author-authorised abridged PDF",
+      "review_method": "Direct open and targeted passage",
+      "supported_claim": "CANI is explicitly described as constant and never-ending improvement.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A02",
+      "category": "author",
+      "name": "Parag Parikh",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "What makes Parag Parikh a great investor",
+        "url": "https://amc.ppfas.com/media/interviews/what-makes-parag-parikh-a-great-investor.php"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Explains patient business ownership, valuation, behavioural mistakes and a margin of safety.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A03",
+      "category": "author",
+      "name": "Morgan Housel",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "The Psychology of Money by Morgan Housel | Harriman House",
+        "url": "https://www.harriman-house.com/psychologyofmoney"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Publisher describes behavioural lessons about money.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A04",
+      "category": "author",
+      "name": "Ramit Sethi",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Conscious Spending Basics (a guide to achieving your Rich Life)",
+        "url": "https://www.iwillteachyoutoberich.com/conscious-spending-basics/"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes deliberate spending aligned with personally meaningful priorities.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A05",
+      "category": "author",
+      "name": "Monika Halan",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Let’s Talk Money English – Monika Halan",
+        "url": "https://www.monikahalan.com/lets-talk-money-english/"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes an understandable financial-security system in the Indian context.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A06",
+      "category": "author",
+      "name": "Vicki Robin",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Your Money Or Your Life Summary – Vicki Robin",
+        "url": "https://vickirobin.com/your-money-or-your-life-summary/"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Author-hosted summary relates money to life energy, values and fulfilment.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A07",
+      "category": "author",
+      "name": "Bill Perkins",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Die With Zero — by Bill Perkins",
+        "url": "https://diewithzerobook.com/"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Official book material prioritises meaningful experiences alongside use of money and time.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A08",
+      "category": "author",
+      "name": "Carl Richards",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "The Behavior Gap by Carl Richards: 9798217046782 | PenguinRandomHouse.com: Books",
+        "url": "https://www.penguinrandomhouse.com/books/310366/the-behavior-gap-by-carl-richards/9781101559550/"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Publisher describes emotion-driven financial mistakes.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A09",
+      "category": "author",
+      "name": "Brian Portnoy",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "The Geometry of Wealth by Brian Portnoy | Harriman House",
+        "url": "https://www.harriman-house.com/geometry-of-wealth"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Publisher defines wealth in relation to funding a meaningful, satisfying life.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A10",
+      "category": "author",
+      "name": "Daniel Crosby",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "The Behavioral Investor by Daniel Crosby - Harriman House",
+        "url": "https://www.harriman-house.com/authors/daniel-crosby/the-behavioral-investor/9781804094341"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Publisher describes psychological influences on investment decisions.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A11",
+      "category": "author",
+      "name": "Daniel Kahneman",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Thinking, Fast and Slow by Daniel Kahneman: 9780739357996 | PenguinRandomHouse.com: Books",
+        "url": "https://www.penguinrandomhouse.com/books/89308/thinking-fast-and-slow-by-daniel-kahneman/"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Publisher describes fast intuitive and slower deliberative thinking.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A12",
+      "category": "author",
+      "name": "Richard Thaler",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Nudge by Richard H. Thaler, Cass R. Sunstein: 9780143137009 | PenguinRandomHouse.com: Books",
+        "url": "https://www.penguinrandomhouse.com/books/690485/nudge-by-richard-h-thaler-and-cass-r-sunstein/9780525508526/"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Publisher identifies choice framing as influential; book is coauthored with Cass Sunstein.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A13",
+      "category": "author",
+      "name": "Annie Duke",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Thinking in Bets by Annie Duke: 9780735216372 | PenguinRandomHouse.com: Books",
+        "url": "https://www.penguinrandomhouse.com/books/552885/thinking-in-bets-by-annie-duke/"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Publisher distinguishes decision quality from outcomes under uncertainty.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A14",
+      "category": "author",
+      "name": "John Bogle",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Wiley-VCH - The Little Book of Common Sense Investing",
+        "url": "https://www.wiley-vch.de/en?isbn=9781119404507&option=com_eshop&view=product"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Publisher describes low-cost index investing and long-term holding.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A15",
+      "category": "author",
+      "name": "Benjamin Graham",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "The Intelligent Investor, chapter 20 preview",
+        "url": "https://www.oreilly.com/library/view/the-intelligent-investor/9780061745171/text/9780061745171_Chapter_20.xhtml"
+      },
+      "evidence_type": "Licensed excerpt, not full book",
+      "review_method": "Direct open and targeted passage",
+      "supported_claim": "Licensed chapter preview explicitly identifies margin of safety as a central concept.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A16",
+      "category": "author",
+      "name": "William Bernstein",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "The Four Pillars of Investing, Second Edition: Lessons for Building a Winning Portfolio",
+        "url": "https://www.mheducation.com/highered/mhp/product/four-pillars-investing-second-edition-lessons-building-winning-portfolio.html"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Publisher identifies theory, history, psychology and business as investing foundations.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A17",
+      "category": "author",
+      "name": "Rick Ferri",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Core Beliefs - Rick Ferri, CFA",
+        "url": "https://rickferri.com/investment-philosophy/"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Describes understanding the client's needs before selecting a portfolio strategy.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A18",
+      "category": "author",
+      "name": "Peter Lynch",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "One Up On Wall Street | Book by Peter Lynch, John Rothchild | Official Publisher Page | Simon & Schuster",
+        "url": "https://www.simonandschuster.com/books/One-Up-On-Wall-Street/Peter-Lynch/9780743200400"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Publisher excerpt connects observations with company research; book includes John Rothchild.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A19",
+      "category": "author",
+      "name": "Howard Marks",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "The Most Important Thing | Columbia University Press",
+        "url": "https://cup.columbia.edu/book/the-most-important-thing/9780231153683/"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Publisher describes risk, price/value relationships and patient opportunism.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A20",
+      "category": "author",
+      "name": "James Clear",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Forget About Setting Goals. Focus on This Instead.",
+        "url": "https://jamesclear.com/goals-systems?dst=medium-goals-systems"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Author excerpt distinguishes goals from systems that support progress.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A21",
+      "category": "author",
+      "name": "BJ Fogg",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Welcome | Tiny Habits",
+        "url": "https://tinyhabits.com/welcome/"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Author describes starting with very small behaviours.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A22",
+      "category": "author",
+      "name": "Stephen Covey",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "The 7 Habits of Highly Effective People®: Foundations | FranklinCovey",
+        "url": "https://www.franklincovey.com/courses/7habits-foundations/"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "FranklinCovey describes desired outcomes and prioritising important goals.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A23",
+      "category": "author",
+      "name": "David Allen",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "3. NEXT ACTIONS LISTS",
+        "url": "https://store.gettingthingsdone.com/wp-content/uploads/2025/04/GTD_Paper_Organizers_SAMPLE.pdf"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Official sample defines next actions as physical, visible steps.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A24",
+      "category": "author",
+      "name": "Greg McKeown",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Essentialism - The Disciplined Pursuit of Less by Greg McKeown",
+        "url": "https://gregmckeown.com/books/essentialism/"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Author describes focusing on essentials and eliminating distractions.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "A25",
+      "category": "author",
+      "name": "Carol Dweck",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Mindset by Carol S. Dweck: 9780345472328 | PenguinRandomHouse.com: Books",
+        "url": "https://www.penguinrandomhouse.com/books/44330/mindset-by-carol-s-dweck-phd/9781588365231/"
+      },
+      "evidence_type": "Author material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Publisher describes the belief that abilities can develop.",
+      "limit": "Supports attribution of this narrow idea, not proof of universal effectiveness, full-book reading or guaranteed wealth.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I01",
+      "category": "investor",
+      "name": "Warren Buffett",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Berkshire Hathaway 2013 shareholder letter, printed pages 19–20",
+        "url": "https://www.berkshirehathaway.com/letters/2013ltr.pdf"
+      },
+      "evidence_type": "Authored shareholder letter",
+      "review_method": "Direct open and targeted passage",
+      "supported_claim": "2013 shareholder letter discusses business understanding, limits of competence and low investment costs.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I02",
+      "category": "investor",
+      "name": "Charlie Munger",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Poor Charlie’s Almanack: The Essential Wit and Wisdom of Charles T. Munger",
+        "url": "https://www.stripe.press/poor-charlies-almanack/talk-nine"
+      },
+      "evidence_type": "First-party material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Published speech advocates drawing on knowledge across disciplines.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I03",
+      "category": "investor",
+      "name": "Benjamin Graham",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "The Intelligent Investor, chapter 20 preview",
+        "url": "https://www.oreilly.com/library/view/the-intelligent-investor/9780061745171/text/9780061745171_Chapter_20.xhtml"
+      },
+      "evidence_type": "Licensed excerpt, not full book",
+      "review_method": "Direct open and targeted passage",
+      "supported_claim": "Licensed book preview identifies margin of safety as a central investing concept.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I04",
+      "category": "investor",
+      "name": "Peter Lynch",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "One Up On Wall Street | Book by Peter Lynch, John Rothchild | Official Publisher Page | Simon & Schuster",
+        "url": "https://www.simonandschuster.com/books/One-Up-On-Wall-Street/Peter-Lynch/9780743200400"
+      },
+      "evidence_type": "First-party material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Published book connects familiar observations with further business research.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I05",
+      "category": "investor",
+      "name": "Li Lu",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Himalaya Capital: investment philosophy",
+        "url": "https://www.himcap.com/"
+      },
+      "evidence_type": "First-party firm philosophy",
+      "review_method": "Direct open; original domain redirected",
+      "supported_claim": "Firm founded by Li Lu describes long-term business ownership and value investing.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I06",
+      "category": "investor",
+      "name": "John Bogle",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Wiley-VCH - The Little Book of Common Sense Investing",
+        "url": "https://www.wiley-vch.de/en?isbn=9781119404507&option=com_eshop&view=product"
+      },
+      "evidence_type": "First-party material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Publisher describes low-cost index investing.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I07",
+      "category": "investor",
+      "name": "Terry Smith",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Fundsmith Equity Fund factsheet: investment objective and risks",
+        "url": "https://www.fundsmith.co.uk/factsheet"
+      },
+      "evidence_type": "First-party fund factsheet",
+      "review_method": "Direct open and targeted passage",
+      "supported_claim": "Fund factsheet describes long-term quality-business investing and attractive valuation criteria.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I08",
+      "category": "investor",
+      "name": "Nick Sleep",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Nomad letters, scale efficiencies shared passage",
+        "url": "https://igyfoundation.org.uk/wp-content/uploads/2021/04/Full_Collection_Nomad_Letters_.pdf"
+      },
+      "evidence_type": "Foundation-hosted original letters",
+      "review_method": "Targeted source-text search; alternate March PDF did not yield the passage",
+      "supported_claim": "Foundation-hosted letters discuss sharing scale efficiencies with customers.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I09",
+      "category": "investor",
+      "name": "David Swensen",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Pioneering Portfolio Management: Institutions versus Individuals excerpt",
+        "url": "https://www.simonandschuster.com/books/Pioneering-Portfolio-Management/David-F-Swensen/9781416544692"
+      },
+      "evidence_type": "Publisher-hosted excerpt",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Publisher describes Swensen's framework and differentiates approaches by active-management ability.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I10",
+      "category": "investor",
+      "name": "David Booth",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "10 Obstacles to Investing—and How to Overcome Them | Dimensional",
+        "url": "https://www.dimensional.com/us-en/insights/10-obstacles-to-investing-and-how-to-overcome-them"
+      },
+      "evidence_type": "First-party material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Authored article discusses diversification, investor discipline and uncertainty.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I11",
+      "category": "investor",
+      "name": "Howard Marks",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Returns, Absolute Returns, and Risk, June 13 2006",
+        "url": "https://www.oaktreecapital.com/docs/default-source/memos/2006-06-13-returns-absolute-returns-and-risk.pdf?sfvrsn=2"
+      },
+      "evidence_type": "Authored memo",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Authored memo discusses risk control and downside protection.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I12",
+      "category": "investor",
+      "name": "Ray Dalio",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Ray Dalio and GMO's Jeremy Grantham on How They're Seeing the World Right Now",
+        "url": "https://www.bridgewater.com/research-and-insights/ray-dalio-and-gmos-jeremy-grantham-on-how-theyre-seeing-the-world-right-now"
+      },
+      "evidence_type": "First-party interview transcript",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Interview transcript discusses diversification in a specific macroeconomic context.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I13",
+      "category": "investor",
+      "name": "George Soros",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "George Soros | Remarks delivered at the Festival of Economics",
+        "url": "https://www.georgesoros.com/2012/06/02/remarks_at_the_festival_of_economics_trento_italy/"
+      },
+      "evidence_type": "First-party material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Authored speech discusses fallibility and feedback between beliefs and events.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I14",
+      "category": "investor",
+      "name": "Seth Klarman",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "About Us : The Baupost Group",
+        "url": "https://www.baupost.com/About"
+      },
+      "evidence_type": "First-party material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Firm describes a long-term, value-oriented mandate under Klarman's investment leadership.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I15",
+      "category": "investor",
+      "name": "Bill Nygren",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Bill Nygren Market Commentary, 3Q19: question on emotions and undervaluation",
+        "url": "https://oakmark.com/news-insights/bill-nygren-market-commentary-3q19/"
+      },
+      "evidence_type": "First-person commentary hosted by the investment firm",
+      "review_method": "Direct open and review of specific first-person passages",
+      "supported_claim": "Nygren says valuation judgments remain uncertain and investors should stay open to new information; patience must not become stubbornness.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow attribution may ground an educational explanation; product application is our synthesis. No fund recommendation or performance promise.",
+      "evidence_locator": "Bill Nygren answer to the question about controlling emotions when holding a losing position.",
+      "product_skill_ids": [
+        17,
+        18,
+        21,
+        25
+      ],
+      "product_application": "Ask what new information could change an estimate or decision; keep estimates visibly uncertain."
+    },
+    {
+      "id": "I16",
+      "category": "investor",
+      "name": "Mohnish Pabrai",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "About - pabraifundpabraifund",
+        "url": "https://pabraifunds.com/about/"
+      },
+      "evidence_type": "First-party material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Firm says Pabrai follows Buffett's value-investing and capital-allocation principles.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I17",
+      "category": "investor",
+      "name": "Joel Greenblatt",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Wiley-VCH - The Little Book That Still Beats the Market",
+        "url": "https://www.wiley-vch.de/en/areas-interest/finance-economics-law/the-little-book-that-still-beats-the-market-978-0-470-62415-9"
+      },
+      "evidence_type": "Publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Publisher describes systematic selection of good businesses at bargain prices.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I18",
+      "category": "investor",
+      "name": "Chuck Akre",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Akre Focus ETF",
+        "url": "https://www.akrefund.com/"
+      },
+      "evidence_type": "First-party material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Firm describes business quality, aligned management and reinvestment in its investment approach.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I19",
+      "category": "investor",
+      "name": "Tom Gayner",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Layout 1",
+        "url": "https://content.markel.com/api/public/content/shareholder-letter-2006?v=6430a491"
+      },
+      "evidence_type": "First-party material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Markel shareholder letter states criteria covering profitability, management, reinvestment and fair price.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I20",
+      "category": "investor",
+      "name": "Jim Simons",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Watch: Jim Simons’ Life, Legacy and 5 Guiding Principles",
+        "url": "https://www.simonsfoundation.org/2025/01/09/watch-jim-simons-life-legacy-and-5-guiding-principles/"
+      },
+      "evidence_type": "First-party material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Foundation biography describes curiosity, mathematics and originality.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I21",
+      "category": "investor",
+      "name": "John Templeton",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Sir John Templeton - John Templeton Foundation",
+        "url": "https://www.templeton.org/about/sir-john-templeton"
+      },
+      "evidence_type": "First-party material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Foundation biography supports intellectual humility; not a verified list of investment rules.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I22",
+      "category": "investor",
+      "name": "Bill Miller",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Approach – Miller Value Partners",
+        "url": "https://millervalue.com/approach/"
+      },
+      "evidence_type": "First-party material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Firm describes active value investing; its ambition to beat markets is not proof of success.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I23",
+      "category": "investor",
+      "name": "Bill Ackman",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "UNAUDITED CONDENSED INTERIM FINANCIAL STATEMENTS",
+        "url": "https://assets.pershingsquareholdings.com/2020/04/09193943/PSH-Interim-Financials-06.30.15-1.pdf"
+      },
+      "evidence_type": "First-party material or publisher description",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Historical fund report describes quality, predictable, cash-generative businesses.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I24",
+      "category": "investor",
+      "name": "Mellody Hobson",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Mellody Hobson - Ariel Investments",
+        "url": "https://www.arielinvestments.com/person/mellody-hobson/"
+      },
+      "evidence_type": "First-party biography",
+      "review_method": "Search-returned source text",
+      "supported_claim": "Official biography identifies Hobson as a financial-literacy advocate.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow claim may ground an educational explanation; product adaptation must be labelled as our synthesis."
+    },
+    {
+      "id": "I25",
+      "category": "investor",
+      "name": "Steven Romick",
+      "checked_on": "2026-10-03",
+      "status": "supported_limited",
+      "source": {
+        "title": "Steven Romick keynote, Morningstar Investment Conference, April 26 2023",
+        "url": "https://fpa.com/wp-content/uploads/Steven-Romick-Morningstar-Keynote-Speech-2023-04-vFINAL.pdf"
+      },
+      "evidence_type": "First-person commentary hosted by the investment firm",
+      "review_method": "Direct open and review of specific first-person passages",
+      "supported_claim": "Romick attributes his investment evolution to continuous learning and discusses avoiding major mistakes while acknowledging luck.",
+      "limit": "Supports only the stated source-level idea; institutional strategies, leverage, returns and personal suitability are not approved.",
+      "coach_use": "Only this narrow attribution may ground an educational explanation; product application is our synthesis. No fund recommendation or performance promise.",
+      "evidence_locator": "PDF page 3, paragraphs beginning Thinking about Crescent and Continuous learning; page 5 acknowledges luck.",
+      "product_skill_ids": [
+        18,
+        22,
+        25
+      ],
+      "product_application": "Encourage learning and reviewing assumptions; separate preparation from guaranteed financial outcomes."
+    }
+  ]
+}
