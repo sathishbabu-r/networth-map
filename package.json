@@ -13,9 +13,13 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@convex-dev/agent": "^0.7.3",
+    "@convex-dev/ai-sdk-provider": "^0.2.1",
+    "ai": "^7.0.127",
     "convex": "^1.46.0"
   },
   "devDependencies": {
+    "typescript": "^7.0.2",
     "vite": "^8.3.2"
   }
 }

@@ -1,53 +1,47 @@
 import './style.css';
 import { attachVoice } from './voice.js';
+import { ConvexHttpClient } from 'convex/browser';
+import { api } from '../convex/_generated/api.js';
 
-const questions = [
-  ['concern', 'What is the one financial issue on your mind right now?', 'A payment, an upcoming expense, a loan or something you keep putting off.'],
-  ['scope', 'Which finances would you like to look at?', 'Choose personal finances, business finances or both.'],
-  ['income', 'About how much income comes in each month?', 'Include the finances you chose. If it varies, say so.'],
-  ['expenses', 'About how much goes out each month?', 'Include regular spending and loan payments. Estimates are welcome.'],
-  ['cash', 'What cash and bank balances do you have available?', 'Tell us what you know. You can leave unknown amounts for later.'],
-  ['investments', 'What investments do you own?', 'For example, shares, mutual funds or deposits. Include approximate values if known.'],
-  ['property', 'What property do you own?', 'Include approximate values and your share of ownership, if known.'],
-  ['business', 'What business ownership or business assets should we include?', 'Describe ownership and underlying assets separately so they can be reviewed together later.'],
-  ['other', 'Are there any other assets to include?', 'For example, gold or money owed to you. “None” is a valid answer.'],
-  ['debts', 'What debts or loans are outstanding?', 'Include approximate balances and whether they are personal or business debts.'],
-];
-const answers = {};
-let step = 0;
+const url = import.meta.env.VITE_CONVEX_URL;
+const client = url ? new ConvexHttpClient(url) : null;
+const messages = [];
+let pending = false;
 const root = document.querySelector('#app');
-root.innerHTML = `<header><a href="/" class="brand">My Money Huddle</a><span>A clearer starting point</span></header><main><aside><p class="method">Blueprint → Vision → MAP</p><h1>Start with what’s on your mind.</h1><p>You don’t need all the numbers. We’ll take one question at a time.</p><p class="privacy">For now, answers stay in this open tab. Typed answers stay here. Voice uses your browser’s speech service, which may process audio online. This app does not save audio or answers. Closing or refreshing clears answers.</p></aside><section aria-label="Your first session"><div id="question"></div></section></main><footer>Estimates are welcome. Unknown doesn’t mean zero.</footer>`;
-const panel = document.querySelector('#question');
-function render(focus = false) {
-  panel.replaceChildren();
-  if (step === questions.length) {
-    panel.innerHTML = `<h2 tabindex="-1">Your answers are ready.</h2><p>You’ve reached the end of this first step. Reviewing and confirming your snapshot comes next.</p><p>Nothing has been saved yet.</p><button type="button" id="back">Review my answers</button>`;
-    panel.querySelector('#back').onclick = () => { step--; render(true); };
-    if (focus) panel.querySelector('h2').focus();
-    return;
-  }
-  const [id, question, hint] = questions[step];
-  panel.innerHTML = `<p class="progress">Question ${step + 1} of ${questions.length}</p><h2 id="heading" tabindex="-1"></h2><p id="hint"></p><form><div id="voice"></div><label for="answer">Review your answer, or type instead</label><textarea id="answer" rows="4" maxlength="5000" aria-describedby="hint error" placeholder="Type what you know…"></textarea><p id="error" role="alert"></p><div class="choices"></div><div class="controls"><button type="button" class="secondary" id="back">Back</button><button type="submit">Confirm answer</button></div></form>`;
-  panel.querySelector('h2').textContent = question;
-  panel.querySelector('#hint').textContent = hint;
-  const input = panel.querySelector('textarea');
-  input.value = answers[id] || '';
-
-  const choices = id === 'scope' ? ['Personal finances', 'Business finances', 'Both'] : ["I don’t know"];
-  for (const label of choices) {
-    const button = document.createElement('button');
-    button.type = 'button'; button.className = 'choice'; button.textContent = label;
-    button.onclick = () => { input.value = label; input.focus(); panel.querySelector('#error').textContent = ''; };
-    panel.querySelector('.choices').append(button);
-  }
-  panel.querySelector('#back').disabled = step === 0;
-  attachVoice(panel.querySelector('#voice'), input, panel.querySelector('button[type=submit]'), panel.querySelector('#back')); 
-  panel.querySelector('#back').onclick = () => { answers[id] = input.value; step--; render(true); };
-  panel.querySelector('form').onsubmit = (event) => {
-    event.preventDefault();
-    if (!input.value.trim()) { panel.querySelector('#error').textContent = 'Type an answer or choose “I don’t know” to continue.'; input.focus(); return; }
-    answers[id] = input.value.trim(); step++; render(true);
-  };
-  if (focus) panel.querySelector('h2').focus();
+root.innerHTML = `<header><a href="/" class="brand">My Money Huddle</a><span>Blueprint → Vision → MAP</span></header><main class="conversation"><aside><h1>Let’s talk about your money.</h1><p>Start with what matters to you. Together, we’ll understand where you stand and find a useful first step.</p><p class="privacy">This is an early coach trial. Messages are processed by Convex and an AI provider. Voice may also use your browser’s online speech service. This app does not save your conversation or audio; closing or refreshing clears this session. Provider retention has not been verified.</p></aside><section aria-label="Conversation with your coach"><div id="messages" role="log" aria-live="polite"></div><form><div id="voice"></div><label for="answer">Review your words, or type instead</label><textarea id="answer" rows="3" maxlength="5000" placeholder="Tell me what’s on your mind…"></textarea><label class="voice-consent"><input id="chat-consent" type="checkbox"> I understand how this conversation is processed</label><p id="error" role="alert"></p><p id="waiting" role="status"></p><div class="controls"><button type="submit">Send to coach</button></div></form></section></main><footer>Estimates and “I don’t know” are welcome. You choose your goal and actions.</footer>`;
+const log = document.querySelector('#messages');
+const input = document.querySelector('#answer');
+const send = document.querySelector('button[type=submit]');
+const error = document.querySelector('#error');
+const waiting = document.querySelector('#waiting');
+function bubble(role, text) {
+  const entry = document.createElement('article'); entry.className = `message ${role}`;
+  const name = document.createElement('p'); name.className = 'speaker'; name.textContent = role === 'user' ? 'You' : 'Your coach';
+  const content = document.createElement('p'); content.textContent = text;
+  entry.append(name, content); log.append(entry);
 }
-render();
+bubble('assistant', 'What is the one financial issue on your mind right now?');
+// Voice helper uses a navigation control to lock while listening. This trial has no Back control.
+const noBack = document.createElement('button'); noBack.disabled = true;
+attachVoice(document.querySelector('#voice'), input, send, noBack);
+function lock(value) {
+  pending = value; send.disabled = value; input.readOnly = value;
+  document.querySelector('#voice button').disabled = value || !(window.SpeechRecognition || window.webkitSpeechRecognition);
+  waiting.textContent = value ? 'Your coach is thinking…' : '';
+}
+document.querySelector('form').onsubmit = async event => {
+  event.preventDefault(); if (pending) return;
+  error.textContent = '';
+  if (!document.querySelector('#chat-consent').checked) { error.textContent = 'Please read the processing note and tick the box before sending.'; return; }
+  const answer = input.value.trim();
+  if (!answer) { error.textContent = 'Speak or type an answer first.'; input.focus(); return; }
+  if (!client) { error.textContent = 'The coach connection has not been configured yet.'; return; }
+  lock(true);
+  try {
+    const result = await client.action(api.coach.reply, { messages: [...messages, {role:'user',content:answer}] });
+    if (result.error) { error.textContent = result.error; return; }
+    messages.push({role:'user',content:answer},{role:'assistant',content:result.text});
+    bubble('user', answer); bubble('assistant', result.text); input.value = '';
+  } catch { error.textContent = 'The coach could not connect. Your answer is still here; try sending again.'; }
+  finally { lock(false); input.focus(); }
+};
