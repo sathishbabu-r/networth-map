@@ -254,6 +254,7 @@ test("blank answers and answers without processing consent never reach the coach
   render(<App />);
   await screen.findByLabelText("Review your words, or type instead");
   expect(screen.getAllByRole("textbox")).toHaveLength(1);
+  expect(screen.queryByText("Saved Huddle")).toBeNull();
   expect(screen.getByRole("button", { name: "Record voice message" })).toBeTruthy();
   expect(screen.queryByRole("checkbox")).toBeNull();
   expect(screen.getByText("Privacy & data")).toBeTruthy();

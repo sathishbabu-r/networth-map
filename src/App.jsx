@@ -715,10 +715,11 @@ function Huddle() {
           </p>
         )}
         {notice && <p role="status">{notice}</p>}
-        {saved && <details className="saved-summary" open={showSummary || undefined}>
-          <summary>{showSummary ? "Your Huddle summary" : "Saved Huddle"}</summary>
+        {showSummary && saved ? (
           <Snapshot content={saved.content} complete={saved.complete} />
-        </details>}
+        ) : saved && notice === "Confirmed information saved to your account." ? (
+          <div className="conversation-insight"><Insights facts={saved.content.facts} /></div>
+        ) : null}
         <Composer onSend={async text => { setShowSummary(false); return onSend(text); }} busy={busy} consent={consent} setConsent={setConsent} reviewPending={Boolean(proposal)}>
         <details className="privacy-data">
           <summary>You choose what gets saved · <span>Privacy &amp; data</span></summary>
