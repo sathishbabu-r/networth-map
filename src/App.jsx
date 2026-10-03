@@ -11,6 +11,9 @@ import { api } from "../convex/_generated/api";
 import { attachVoice } from "./voice.js";
 import { calculateInsights } from "../shared/financial.mjs";
 import "./style.css";
+function HuddleIcon({ className = "" }) {
+  return <img className={"huddle-icon " + className} src="/money-huddle.svg" alt="" width="40" height="40" />;
+}
 const money = (n) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -693,7 +696,7 @@ function Huddle() {
   return (
     <main className="conversation">
       <section className="thread" aria-label="Conversation with your coach">
-        <h1 className="thread-title">My Money Huddle</h1>
+        <div className="thread-identity"><HuddleIcon /><h1 className="thread-title">My Money Huddle</h1></div>
         <div id="messages" ref={log} role="log" aria-live="polite">
           {messages.map((m, i) => (
             <article key={i} className={"message " + m.role}>
@@ -797,7 +800,7 @@ export function App() {
     <>
       <header>
         <a className="brand" href="/">
-          My Money Huddle
+          <HuddleIcon />My Money Huddle
         </a>
         {isAuthenticated ? (
           <button
