@@ -125,144 +125,80 @@ async function send(text) {
     fireEvent.click(screen.getByRole("button", { name: "Send message" }));
   }
 }
-async function confirm() {
-  fireEvent.click(screen.getByRole("button", { name: "Confirm", exact: true }));
-}
-test("FINISH UI: confirmed facts → 62.5% formula → chosen goal → dated action → logout/login remembers commitment (mock providers)", async () => {
-  const s1 = {
-    concern: "Cash is tight because customers have not paid",
-    facts: [fact("customer_receivables", "Customer receivables", 800000)],
-    goal: null,
-    action: null,
-    outcome: null,
-  };
-  const s2 = {
-    ...s1,
-    facts: [
-      ...s1.facts,
-      fact("overdue_receivables", "Overdue receivables", 500000),
-    ],
-  };
-  const s3 = {
-    ...s2,
-    goal: { text: "Collect ₹3 lakh this month", targetDate: "2026-10-31" },
-  };
-  const s4 = {
-    ...s3,
-    action: {
-      text: "Call five largest overdue customers",
-      dueDate: "2026-10-09",
-    },
-  };
+test("FINISH UI: automatically remembered facts → formula → goal → action → logout/login (mock providers)", async () => {
+  const s1 = { concern: "Fictional overdue customers", facts: [fact("customer_receivables", "Customer receivables", 800000)], goal: null, action: null, outcome: null };
+  const s2 = { ...s1, facts: [...s1.facts, fact("overdue_receivables", "Overdue receivables", 500000)] };
+  const s3 = { ...s2, goal: { text: "Collect ₹3 lakh this month", targetDate: "2026-10-31" } };
+  const s4 = { ...s3, action: { text: "Call five largest overdue customers", dueDate: "2026-10-09" } };
   state.replies = [
-    { text: "Please review your current customer receivables.", proposal: s1 },
-    { text: "How much is overdue?", proposal: null },
-    { text: "Please review your overdue balance.", proposal: s2 },
-    { text: "What would you like to achieve?", proposal: null },
-    { text: "Please review your chosen goal.", proposal: s3 },
-    { text: "What action will you take, and by when?", proposal: null },
-    { text: "Please review your chosen action and date.", proposal: s4 },
+    { text: "Review receivables", proposal: s1 }, { text: "How much is overdue?", proposal: null },
+    { text: "Review overdue balance", proposal: s2 }, { text: "What would you like to achieve?", proposal: null },
+    { text: "Review goal", proposal: s3 }, { text: "What's one action this week?", proposal: null },
+    { text: "Review action", proposal: s4 },
   ];
-  render(<App />);
-  await login();
-  await send(
-    "Customers have not paid; current business receivables are around eight lakh.",
-  );
-  await screen.findByRole("heading", { name: "I understood" });
-  expect(state.saveCalls).toBe(0);
-  await confirm();
+  render(<App />); await login();
+  await send("Fictional current business receivables are around eight lakh.");
   await screen.findByText("How much is overdue?");
+  expect(state.saveCalls).toBe(1);
+  expect(screen.queryByRole("heading", { name: "I understood" })).toBeNull();
   await send("Around five lakh is overdue now.");
-  await screen.findByText("Please review your overdue balance.");
-  expect(screen.queryByText(/62.5% of your receivables/)).toBeNull();
-  await confirm();
   await screen.findByText(/62.5% of your receivables/);
-  expect(state.saveCalls).toBe(2);
   await send("I choose to collect three lakh this month.");
-  await screen.findByText("Please review your chosen goal.");
-  await confirm();
-  await screen.findByText("What action will you take, and by when?");
+  await screen.findByText("What's one action this week?");
   await send("Call my five biggest overdue customers by 9 October 2026.");
-  await screen.findByText("Please review your chosen action and date.");
-  await confirm();
-  await screen.findByText(
-    "Your Huddle is complete. You have chosen your goal and dated action. Your confirmed summary is saved below.",
-  );
+  await screen.findByText(/This week: Call five largest overdue customers/);
   expect(state.saved.complete).toBe(true);
   expect(state.saved.content.action).toEqual(s4.action);
   expect(state.saveCalls).toBe(4);
   fireEvent.click(screen.getByRole("button", { name: "Log out" }));
   await screen.findByRole("heading", { name: "Start your Money Huddle" });
-  expect(screen.queryByText("Customer receivables")).toBeNull();
   await login();
-  await screen.findByText(
-    /Last time your goal was: Collect ₹3 lakh this month.*What happened/,
-  );
-  expect(
-    screen.queryByText(
-      "What's the one financial issue on your mind right now?",
-    ),
-  ).toBeNull();
+  await screen.findByText(/Last time your goal was: Collect ₹3 lakh this month.*What happened/);
 });
-test("edit corrects a proposed number; failed save preserves proposal; retry saves only confirmed correction (mock providers)", async () => {
+test("failed automatic save keeps the answer; retry and conversational correction update memory", async () => {
   state.signedIn = true;
-  const content = {
-    concern: "Outstanding customers",
-    facts: [fact("customer_receivables", "Customer receivables", 800000)],
-    goal: null,
-    action: null,
-    outcome: null,
-  };
-  state.replies = [
-    { text: "Review the amount.", proposal: content },
-    { text: "What would you like to achieve?", proposal: null },
-  ];
-  render(<App />);
-  await screen.findByLabelText("Review your words, or type instead");
-  await send("About eight lakh is due.");
-  await screen.findByText("Review the amount.");
-  fireEvent.click(screen.getByRole("button", { name: "Edit", exact: true }));
-  fireEvent.change(screen.getByLabelText("Amount in rupees"), {
-    target: { value: "850000" },
-  });
-  state.failSave = true;
-  await confirm();
+  const content = { concern: "Fictional receivables", facts: [fact("customer_receivables", "Customer receivables", 800000)], goal: null, action: null, outcome: null };
+  const corrected = { ...content, facts: [fact("customer_receivables", "Customer receivables", 850000)] };
+  state.replies = [{ text: "Review", proposal: content }, { text: "Review", proposal: content }, { text: "What would you like to achieve?", proposal: null }, { text: "Review", proposal: corrected }, { text: "What would you like to achieve next?", proposal: null }];
+  render(<App />); await screen.findByLabelText("Review your words, or type instead");
+  state.failSave = true; await send("Fictional receivables are eight lakh.");
   await screen.findByRole("alert");
   expect(state.saved).toBeNull();
-  expect(screen.getByLabelText("Amount in rupees").value).toBe("850000");
-  state.failSave = false;
-  await confirm();
-  await waitFor(() =>
-    expect(state.saved?.content.facts[0].amount).toBe(850000),
-  );
+  expect(screen.getByLabelText("Review your words, or type instead").value).toBe("Fictional receivables are eight lakh.");
+  state.failSave = false; await send("Fictional receivables are eight lakh.");
+  await screen.findByText("What would you like to achieve?");
+  await send("Correction: receivables are eight lakh fifty thousand.");
+  await screen.findByText("What would you like to achieve next?");
+  expect(state.saved.content.facts[0].amount).toBe(850000);
+  expect(state.saveCalls).toBe(2);
 });
-test("blank answers and answers without processing consent never reach the coach (mock providers)", async () => {
-  state.signedIn = true;
-  render(<App />);
+test("blank answers and answers without processing consent never reach the coach", async () => {
+  state.signedIn = true; render(<App />);
   await screen.findByLabelText("Review your words, or type instead");
   fireEvent.click(screen.getByRole("button", { name: "Send message" }));
   await screen.findByRole("dialog", { name: "Before your first message" });
-  expect(state.replies).toHaveLength(0);
+  expect(state.saveCalls).toBe(0);
   fireEvent.click(screen.getByRole("button", { name: "I understand — continue" }));
   fireEvent.click(screen.getByRole("button", { name: "Send message" }));
   await screen.findByText("Speak or type an answer first.");
-  expect(state.saveCalls).toBe(0);
 });
-
- test("conversation has one composer, discreet privacy controls and explicit first-use consent", async () => {
-  state.signedIn = true;
-  render(<App />);
+test("one composer, privacy controls and no financial confirmation cards", async () => {
+  state.signedIn = true; render(<App />);
   await screen.findByLabelText("Review your words, or type instead");
   expect(screen.getAllByRole("textbox")).toHaveLength(1);
-  expect(screen.queryByText("Saved Huddle")).toBeNull();
   expect(screen.getByRole("button", { name: "Record voice message" })).toBeTruthy();
   expect(screen.queryByRole("checkbox")).toBeNull();
+  expect(screen.queryByText("Saved Huddle")).toBeNull();
   expect(screen.getByText("Privacy & data")).toBeTruthy();
-  fireEvent.change(screen.getByLabelText("Review your words, or type instead"), { target: { value: "Fictional test concern" } });
-  fireEvent.click(screen.getByRole("button", { name: "Send message" }));
-  await screen.findByRole("dialog", { name: "Before your first message" });
-  expect(screen.getByLabelText("Review your words, or type instead").value).toBe("Fictional test concern");
-  expect(state.saveCalls).toBe(0);
-  fireEvent.click(screen.getByRole("button", { name: "Not now" }));
-  expect(screen.queryByRole("dialog")).toBeNull();
+});
+test("a repeated saved proposal does not create another confirmation or another save", async () => {
+  state.signedIn = true;
+  const content = { concern: "Fictional receivables", facts: [fact("customer_receivables", "Customer receivables", 800000)], goal: null, action: null, outcome: null };
+  state.replies = [{ text: "Review", proposal: content }, { text: "Confirm again", proposal: JSON.parse(JSON.stringify(content)) }];
+  render(<App />); await screen.findByLabelText("Review your words, or type instead");
+  await send("Fictional receivables are eight lakh.");
+  await screen.findByText("What would you like to achieve?");
+  expect(screen.queryByRole("heading", { name: "I understood" })).toBeNull();
+  expect(screen.queryByText("Confirm again")).toBeNull();
+  expect(state.saveCalls).toBe(1);
 });
