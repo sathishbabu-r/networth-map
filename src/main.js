@@ -1,4 +1,5 @@
 import './style.css';
+import { attachVoice } from './voice.js';
 
 const questions = [
   ['concern', 'What is the one financial issue on your mind right now?', 'A payment, an upcoming expense, a loan or something you keep putting off.'],
@@ -15,22 +16,23 @@ const questions = [
 const answers = {};
 let step = 0;
 const root = document.querySelector('#app');
-root.innerHTML = `<header><a href="/" class="brand">My Money Huddle</a><span>A clearer starting point</span></header><main><aside><p class="method">Blueprint → Vision → MAP</p><h1>Start with what’s on your mind.</h1><p>You don’t need all the numbers. We’ll take one question at a time.</p><p class="privacy">For now, answers stay in this open tab. They aren’t sent to an AI provider or saved. Closing or refreshing clears them.</p></aside><section aria-label="Your first session"><div id="question"></div></section></main><footer>Estimates are welcome. Unknown doesn’t mean zero.</footer>`;
+root.innerHTML = `<header><a href="/" class="brand">My Money Huddle</a><span>A clearer starting point</span></header><main><aside><p class="method">Blueprint → Vision → MAP</p><h1>Start with what’s on your mind.</h1><p>You don’t need all the numbers. We’ll take one question at a time.</p><p class="privacy">For now, answers stay in this open tab. Typed answers stay here. Voice uses your browser’s speech service, which may process audio online. This app does not save audio or answers. Closing or refreshing clears answers.</p></aside><section aria-label="Your first session"><div id="question"></div></section></main><footer>Estimates are welcome. Unknown doesn’t mean zero.</footer>`;
 const panel = document.querySelector('#question');
 function render(focus = false) {
   panel.replaceChildren();
   if (step === questions.length) {
-    panel.innerHTML = `<h2 tabindex="-1">Your typed answers are ready.</h2><p>You’ve reached the end of this first step. Reviewing and confirming your snapshot comes next.</p><p>Nothing has been saved yet.</p><button type="button" id="back">Review my answers</button>`;
+    panel.innerHTML = `<h2 tabindex="-1">Your answers are ready.</h2><p>You’ve reached the end of this first step. Reviewing and confirming your snapshot comes next.</p><p>Nothing has been saved yet.</p><button type="button" id="back">Review my answers</button>`;
     panel.querySelector('#back').onclick = () => { step--; render(true); };
     if (focus) panel.querySelector('h2').focus();
     return;
   }
   const [id, question, hint] = questions[step];
-  panel.innerHTML = `<p class="progress">Question ${step + 1} of ${questions.length}</p><h2 id="heading" tabindex="-1"></h2><p id="hint"></p><form><label for="answer">Your answer</label><textarea id="answer" rows="4" maxlength="5000" aria-describedby="hint error" placeholder="Type what you know…"></textarea><p id="error" role="alert"></p><div class="choices"></div><div class="controls"><button type="button" class="secondary" id="back">Back</button><button type="submit">Next question</button></div></form>`;
+  panel.innerHTML = `<p class="progress">Question ${step + 1} of ${questions.length}</p><h2 id="heading" tabindex="-1"></h2><p id="hint"></p><form><div id="voice"></div><label for="answer">Review your answer, or type instead</label><textarea id="answer" rows="4" maxlength="5000" aria-describedby="hint error" placeholder="Type what you know…"></textarea><p id="error" role="alert"></p><div class="choices"></div><div class="controls"><button type="button" class="secondary" id="back">Back</button><button type="submit">Confirm answer</button></div></form>`;
   panel.querySelector('h2').textContent = question;
   panel.querySelector('#hint').textContent = hint;
   const input = panel.querySelector('textarea');
   input.value = answers[id] || '';
+
   const choices = id === 'scope' ? ['Personal finances', 'Business finances', 'Both'] : ["I don’t know"];
   for (const label of choices) {
     const button = document.createElement('button');
@@ -39,6 +41,7 @@ function render(focus = false) {
     panel.querySelector('.choices').append(button);
   }
   panel.querySelector('#back').disabled = step === 0;
+  attachVoice(panel.querySelector('#voice'), input, panel.querySelector('button[type=submit]'), panel.querySelector('#back')); 
   panel.querySelector('#back').onclick = () => { answers[id] = input.value; step--; render(true); };
   panel.querySelector('form').onsubmit = (event) => {
     event.preventDefault();
