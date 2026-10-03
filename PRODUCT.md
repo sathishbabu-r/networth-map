@@ -2,7 +2,7 @@
 
 ## 1. THE JOB
 
-**My Money Huddle is a conversational AI financial coaching agent for business owners.**
+**My Money Huddle is a conversational AI financial clarity and accountability agent for business owners.**
 
 It helps a user talk through a financial issue and move from:
 
@@ -42,13 +42,13 @@ He should be able to complete the first Huddle independently.
 
 ## 3. THE CONVERSATIONAL AGENT
 
-My Money Huddle should feel like talking to a financial coach — **not completing a questionnaire**.
+My Money Huddle should feel like talking to a trusted financial thinking partner — **not completing a questionnaire**.
 
 The user interacts through:
 
 **🎙 Speak** or **⌨ Type**
 
-The same conversation supports both.
+Both are simply different ways of participating in the same conversation.
 
 The agent begins:
 
@@ -61,7 +61,7 @@ Ratheesh:
 
 The agent does not follow a fixed questionnaire.
 
-It uses the conversation and confirmed context to decide the **next most useful question**.
+It uses the current conversation and previously confirmed context to decide the **next most useful question**.
 
 > **Money Huddle:**  
 > Understood. Roughly how much is currently outstanding from customers?
@@ -87,7 +87,7 @@ Ratheesh:
 
 The conversation continues naturally.
 
-The agent should ask **only enough questions to understand the current issue and help the user reach a useful next action**.
+The agent asks **only enough questions to understand the current issue and help the user reach a useful next action**.
 
 It should not attempt to collect every possible financial detail.
 
@@ -103,17 +103,45 @@ The agent follows a simple internal loop:
 
 Understand what the user is trying to solve.
 
+Do not immediately start collecting financial data.
+
+First understand **why the user started the Huddle**.
+
 ### UNDERSTAND
 
 Extract relevant financial facts from the conversation.
 
+Distinguish between:
+
+- confirmed figures,
+- estimates,
+- ranges,
+- unknown information, and
+- statements that require clarification.
+
 ### CLARIFY
 
-Ask the next most useful question when important information is missing or ambiguous.
+Ask the **next most useful question** when important information is missing or ambiguous.
+
+The agent should avoid unnecessary questions.
+
+The objective is not to complete a financial questionnaire.
+
+The objective is to understand **enough to help the user move forward**.
 
 ### CONFIRM
 
 Important financial information is confirmed before becoming part of the saved financial snapshot.
+
+For example:
+
+> **I understood:**  
+> Customer receivables: ₹8,00,000  
+> Estimate
+
+**[✓ Confirm] [Edit]**
+
+Confirmed context can then be remembered for future Huddles.
 
 ### CALCULATE
 
@@ -123,9 +151,16 @@ Example:
 
 ₹5 lakh overdue ÷ ₹8 lakh receivables = **62.5% overdue**
 
+Calculations should be reproducible and explainable.
+
 ### COACH
 
-Help the user think through what they want to achieve and possible actions.
+Help the user think through:
+
+- what matters,
+- what outcome they want,
+- what options they have, and
+- what they are realistically willing to do.
 
 The agent can ask:
 
@@ -135,15 +170,21 @@ or:
 
 > “What could you realistically do about this this week?”
 
-The agent helps the user think.
+or:
 
-**It does not make the decision for them.**
+> “What is stopping you from doing that today?”
+
+The agent helps the user **think and choose**.
+
+It does not make the decision for them.
 
 ### COMMIT
 
 Turn the user's chosen action into something specific and dated.
 
-> **Action:** Call five largest overdue customers  
+For example:
+
+> **Action:** Call the five customers with the largest overdue balances  
 > **Due:** Friday
 
 The user confirms the commitment.
@@ -152,17 +193,21 @@ The user confirms the commitment.
 
 ## 5. FINANCIAL INTELLIGENCE
 
-The agent separates:
+The product separates:
 
-**Confirmed Facts → Calculations → Insights → User Decisions**
+**Confirmed Facts → Calculations → Insights → User Decisions → Actions → Outcomes**
 
-For v1, insights must be deterministic.
+For v1, financial insights must be **deterministic**.
 
 ### Allowed
 
 > “₹5 lakh of your ₹8 lakh receivables are overdue — 62.5%.”
 
 > “Your ₹80,000 monthly EMI represents 40% of your ₹2 lakh monthly income.”
+
+> “You have ₹5 lakh available against ₹7 lakh of payments due this month — a ₹2 lakh gap.”
+
+These observations come directly from confirmed numbers and defined formulas.
 
 ### Not allowed in v1
 
@@ -172,6 +217,12 @@ For v1, insights must be deterministic.
 
 > “This investment is a bad decision.”
 
+> “You should sell this asset.”
+
+> “You can afford this purchase.”
+
+These require financial judgement.
+
 ### V1 rule
 
 > **If a conclusion can be calculated from confirmed data using a defined formula, the agent can show it. If it requires financial judgement, it waits.**
@@ -180,15 +231,17 @@ The conversational AI handles the dialogue.
 
 Defined financial logic handles the calculations.
 
+The product should make it possible to understand **how a number was calculated**.
+
 ---
 
 ## 6. THE HUDDLE LOOP
 
-A successful conversation should naturally move through:
+A successful Money Huddle should naturally move through:
 
 ### OPEN
 
-> “What's on your mind financially?”
+> **“What's on your mind financially?”**
 
 ↓
 
@@ -198,21 +251,29 @@ Understand the issue through conversation.
 
 ↓
 
+### CLARIFY
+
+Ask only the questions needed to understand the issue.
+
+↓
+
 ### CONFIRM
 
-Build a small, relevant financial snapshot.
+Build a small, relevant and confirmed financial snapshot.
 
 ↓
 
 ### INSIGHT
 
-Surface one useful formula-based observation when supported by the data.
+Surface one useful formula-based observation when supported by confirmed data.
 
 ↓
 
 ### GOAL
 
-> “What would you like to achieve?”
+Ask:
+
+> **“What would you like to achieve?”**
 
 The user chooses the goal.
 
@@ -222,30 +283,55 @@ The user chooses the goal.
 
 The agent may help the user think through possible actions.
 
+The user remains the decision-maker.
+
 ↓
 
 ### ACTION
 
-> “What's one thing you are willing to do this week?”
+Ask:
+
+> **“What's one thing you are willing to do this week?”**
 
 ↓
 
 ### COMMIT
 
-Specify **what + by when**.
+Specify:
+
+**What + By When**
 
 ↓
 
 ### CLOSE
 
-Show:
+Show the Huddle summary:
 
 **Snapshot → Insight → Goal → Action**
+
+For example:
+
+### YOUR MONEY HUDDLE
+
+**SNAPSHOT**  
+₹8 lakh customer receivables  
+₹5 lakh overdue
+
+**INSIGHT**  
+62.5% of customer receivables are overdue.
+
+**GOAL**  
+Collect ₹3 lakh this month.
+
+**THIS WEEK**  
+Call the five customers with the largest overdue balances by Friday.
 
 Then offer:
 
 > **Continue with My Money Huddle**  
 > ₹999 for one month of Money Huddle check-ins.
+
+**[Continue for ₹999]**
 
 Payment happens inside the product.
 
@@ -253,14 +339,16 @@ Payment happens inside the product.
 
 ## 7. RETURN HUDDLE & V1 BOUNDARY
 
-When the user returns, the agent remembers **confirmed context**.
+When the user returns, My Money Huddle remembers **confirmed context and commitments**.
 
-It does not restart onboarding.
+It should not restart onboarding or ask the user to repeat information already confirmed.
 
-For example:
+Instead:
 
 > **Money Huddle:**  
 > Last time you wanted to collect ₹3 lakh and committed to calling your five largest overdue customers by Friday. What happened?
+
+The user can **speak or type**.
 
 Ratheesh:
 
@@ -268,21 +356,33 @@ Ratheesh:
 
 The agent proposes:
 
-**Action:** Call five customers  
-**Status:** Completed
+> **Action:** Call five overdue customers  
+> **Status:** Completed
+>
+> **Outcome:** Three customers paid  
+> **Amount collected:** ₹2,00,000
 
-**Outcome:** Three customers paid  
-**Amount collected:** ₹2,00,000
-
-The user confirms.
+The user confirms or corrects the information.
 
 The product distinguishes:
 
 **ACTION → OUTCOME → FINANCIAL IMPACT**
 
+These are not the same thing.
+
+For example:
+
+**Action:** Called five customers.
+
+**Outcome:** Three customers paid.
+
+**Financial impact:** ₹2,00,000 collected.
+
 Completing an action is not automatically counted as financial improvement.
 
-### V1 includes
+---
+
+# V1 INCLUDES
 
 - Conversational AI agent
 - Chat
@@ -290,54 +390,130 @@ Completing an action is not automatically counted as financial improvement.
 - Context-aware follow-up questions
 - Speech-to-text
 - Structured financial data extraction
-- Confirm/edit
+- Estimates and unknown values
+- Confirm/edit before important information is saved
 - Saved confirmed context
-- Formula-based calculations
+- Formula-based financial calculations
+- One useful deterministic insight where supported
 - One chosen goal
 - One dated action
 - Return Huddle
+- Remembered commitments
 - Action vs outcome tracking
+- Financial impact recording
 - ₹999 in-app payment
 
-### V1 excludes
+---
+
+# V1 EXCLUDES
 
 - Full Networth MAP
 - Bank connections
+- Automatic account aggregation
 - Document uploads
+- Portfolio recommendations
 - Investment recommendations
 - AI financial judgement
+- Autonomous financial decisions
 - Continuous listening
 - Spoken AI responses
-- Autonomous financial decisions
 - Multiple simultaneous goals
-- Automated reminders
 - Complex dashboards
+- Automated reminders
 - Automated outcome verification
-- Long-term reporting
+- Weekly/monthly/quarterly reports
+- Comprehensive financial planning
 
-## MILESTONES
+These wait until the core Huddle is validated.
 
-### FINISH
+---
+
+# AGENT GUARDRAILS
+
+The agent should:
+
+- ask one useful question at a time,
+- keep responses concise,
+- use confirmed context instead of repeatedly asking for information,
+- clearly identify estimates,
+- acknowledge unknown information,
+- show calculations transparently,
+- ask for confirmation before important information is saved,
+- help the user think rather than decide for them, and
+- keep moving the conversation toward a useful outcome.
+
+The agent should **not**:
+
+- interrogate the user,
+- complete the full Networth MAP unnecessarily,
+- invent financial information,
+- present assumptions as facts,
+- overwhelm the user with analysis,
+- make investment recommendations,
+- make autonomous financial decisions, or
+- continue asking questions once enough information exists to move toward a goal and action.
+
+### Stopping rule
+
+> **Once the agent has enough confirmed information to understand the issue and help the user choose a useful goal and action, it should stop gathering information and move the Huddle forward.**
+
+---
+
+# MILESTONES
+
+## 1. FINISH
+
 Ratheesh independently reaches:
 
-**Confirmed Snapshot + Goal + Dated Action**
+**Confirmed Snapshot + One Goal + One Dated Action**
 
-within **15 minutes**.
+within:
 
-### ACT
-He completes his chosen action within **7 days**.
+**≤15 minutes**
 
-### PAY
-He pays:
+I do not guide him or touch the keyboard.
 
-**₹999 for one month of Money Huddle check-ins**
+---
 
-inside the product.
+## 2. ACT
+
+Ratheesh completes his chosen action within:
+
+**7 days**
+
+If he does not complete it, understand why before building reminders or additional accountability features.
+
+---
+
+## 3. PAY
+
+At the end of the first Huddle, Ratheesh is offered:
+
+> **₹999 for one month of Money Huddle check-ins.**
+
+Payment happens **inside the product**.
+
+Actual payment is the strongest early commercial validation signal.
+
+---
 
 # V1 SUCCESS
 
-> **CONVERSE → UNDERSTAND → CHOOSE → ACT → RETURN**
+The product experience is:
 
-Commercial proof:
+> **CONVERSE → UNDERSTAND → CLARIFY → CONFIRM → CHOOSE → COMMIT → RETURN → MEASURE**
+
+The validation loop is:
 
 > **FINISH → ACT → PAY**
+
+The sprint does not need to prove the entire Networth Coach vision.
+
+It needs to prove that a business owner will:
+
+1. have a useful financial conversation with the agent,
+2. reach a meaningful action within 15 minutes,
+3. follow through on that action, and
+4. pay to continue using the product.
+
+If those signals appear, **My Money Huddle earns the right to become a larger financial intelligence and accountability platform.**
