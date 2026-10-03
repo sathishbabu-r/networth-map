@@ -9,6 +9,7 @@
  */
 
 import type * as coach from "../coach.js";
+import type * as speech from "../speech.js";
 
 import type {
   ApiFromModules,
@@ -18,6 +19,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   coach: typeof coach;
+  speech: typeof speech;
 }>;
 
 /**
