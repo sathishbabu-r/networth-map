@@ -1,0 +1,10 @@
+import {test,expect,vi,afterEach} from 'vitest';
+import {convexTest} from 'convex-test';
+import schema from '../convex/schema';
+import {api} from '../convex/_generated/api';
+const calls=vi.hoisted(()=>[] as unknown[]);
+vi.mock('@convex-dev/agent',()=>({Agent:class{async generateObject(_ctx:unknown,thread:{userId?:string},_args:unknown,options:unknown){if(!thread.userId)throw Error('Specify userId or threadId');calls.push({thread,options});return {object:{text:'What would you like to achieve?',proposal:null}};}}}));
+vi.mock('convex/server',async importOriginal=>({...await importOriginal<typeof import('convex/server')>(),getServiceToken:async()=>{throw Error('Gateway unavailable in test');}}));
+const modules=import.meta.glob('../convex/**/*.{ts,js}');
+afterEach(()=>{vi.unstubAllEnvs();calls.length=0;});
+test('coach passes the signed-in identity required by the agent and does not retain raw messages (mock provider)',async()=>{vi.stubEnv('OPENAI_API_KEY','test-only-placeholder');const t=convexTest(schema,modules);const id=await t.run(ctx=>ctx.db.insert('users',{name:'Coach pilot'}));const user=t.withIdentity({subject:id+'|session'});const result=await user.action(api.coach.reply,{messages:[{role:'user',content:'Cash is tight'}],today:'2026-10-03'});expect(result.error).toBeNull();expect(result.text).toBe('What would you like to achieve?');expect(calls).toEqual([{thread:{userId:id},options:{storageOptions:{saveMessages:'none'}}}]);expect(await user.query(api.huddles.current,{})).toBeNull();});

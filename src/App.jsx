@@ -906,11 +906,9 @@ export function App() {
       ) : (
         <main>
           <aside>
-            <h1>A useful first step starts with a conversation.</h1>
-            <p>
-              Talk through what’s on your mind. Leave with a clearer picture,
-              one goal and one action for this week.
-            </p>
+            <p className="opening-line">A guided 10-minute financial clarity conversation with My Money Huddle</p>
+            <h1>Your wealth.<br/>Your vision.<br/>Your next move.</h1>
+            <p>Know your wealth. Define your vision. Make your next move with clarity.</p>
           </aside>
           <section className="signin">
             <h2>Start your Money Huddle</h2>

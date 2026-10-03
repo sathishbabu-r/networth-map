@@ -12,6 +12,7 @@ import { content } from "./validators";
 import { validateContent } from "../shared/huddle.mjs";
 import { calculateInsights } from "../shared/financial.mjs";
 import { providerFailure } from "../shared/provider-error.mjs";
+import {preserveUncertainty} from "../shared/uncertainty.mjs";
 import research from "../docs/RESEARCH_SOURCES.json";
 const factSchema = z.object({
   key: z.string(),
@@ -187,10 +188,11 @@ export const reply = action({
       languageModel: model,
       instructions: rules,
     });
+    let phase = "generate";
     try {
       const result = await agent.generateObject(
         ctx,
-        {},
+        { userId },
         {
           schema: resultSchema,
           messages,
@@ -208,7 +210,9 @@ export const reply = action({
         },
         { storageOptions: { saveMessages: "none" } },
       );
-      const output = result.object;
+      phase = "validate";
+      const generated = result.object;
+      const output = {...generated, proposal:preserveUncertainty(generated.proposal, confirmed, messages.at(-1)?.content ?? "")};
       if (
         !output.text.trim() ||
         output.text.length > 2500 ||
@@ -217,14 +221,14 @@ export const reply = action({
         return fail("The coach response could not be verified. Please retry.");
       if (output.proposal) validateContent(output.proposal);
       return {
-        text: output.text,
+        text: output.proposal ? "Please review what I understood below. Confirm or correct it before we continue." : output.text,
         proposal: output.proposal,
         revision: saved?.revision ?? 0,
         error: null,
       };
     } catch (error) {
       const failure = providerFailure(error);
-      console.warn("Huddle coach diagnostic", JSON.stringify({status:failure.status,code:failure.code,name:error instanceof Error && /^[A-Za-z_]+$/.test(error.name)?error.name:"UnknownError"}));
+      console.warn("Huddle coach diagnostic", JSON.stringify({phase,status:failure.status,code:failure.code,name:error instanceof Error && /^[A-Za-z_]+$/.test(error.name)?error.name:"UnknownError"}));
       return fail(failure.message);
     }
   },
