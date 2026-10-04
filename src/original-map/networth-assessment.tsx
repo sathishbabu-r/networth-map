@@ -658,14 +658,14 @@ function LiveNetworthPreview({
   );
 }
 
-export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus }: { onDraftStatus?: (dirty: boolean) => void; onDelete?: () => void; memory?: import("../../shared/map-schema").MapMemory | null; onChange: (data: AssessmentData, step: number) => void }) {
+export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, startAtBlueprint = false }: { startAtBlueprint?: boolean; onDraftStatus?: (dirty: boolean) => void; onDelete?: () => void; memory?: import("../../shared/map-schema").MapMemory | null; onChange: (data: AssessmentData, step: number) => void }) {
   const {
     track,
     submitFeedback,
     markMapCompleted,
     submitCompletedMapEmail,
   } = useProductInsights();
-  const [step, setStep] = useState(memory?.step ?? 0);
+  const [step, setStep] = useState(memory?.step || (startAtBlueprint ? 1 : 0));
   const [showQuickStart, setShowQuickStart] = useState(false);
   const [data, setData] = useState<AssessmentData>(() => assessmentFromMemory(memory));
   const draftStatus=useRef(onDraftStatus);draftStatus.current=onDraftStatus;
@@ -764,7 +764,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus }
     const signature=JSON.stringify(memory);
     if(signature!==received.current){
       received.current=signature;
-      const next=assessmentFromMemory(memory);const nextStep=memory?.step??0;
+      const next=assessmentFromMemory(memory);const nextStep=memory?.step || (startAtBlueprint ? 1 : 0);
       if (lastSent.current && nextStep === lastSent.current.step && JSON.stringify(stable(next)) === JSON.stringify(stable(assessmentFromMemory(lastSent.current)))) return;
       published.current=JSON.stringify({data:next,step:nextStep});
       setData(next);setStep(nextStep);

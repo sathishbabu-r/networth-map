@@ -242,6 +242,8 @@ test("a financial correction keeps the remembered action and continues the conve
   expect(screen.queryByRole("button",{name:"Send message"})).toBeNull();
   await openMap();
   expect(screen.getByRole("heading",{name:"My Money Huddle"})).toBeTruthy();
+  expect(screen.queryByRole("button",{name:/Build My Networth Map/i})).toBeNull();
+  expect(screen.getByRole("heading",{name:"What income do you take home?"})).toBeTruthy();
   fireEvent.change(screen.getByLabelText("Review your words, or type instead"),{target:{value:"My next step"}});
   fireEvent.click(screen.getByRole("link",{name:"Networth MAP"}));
   expect(screen.getByRole("button",{name:"Start My Blueprint"})).toBeTruthy();

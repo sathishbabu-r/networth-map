@@ -38,3 +38,14 @@ test("a save acknowledgement does not replace a newer draft in the original MAP"
  expect(screen.getByDisplayValue("70,000")).toBeTruthy();
  await waitFor(()=>expect(onChange).toHaveBeenCalledTimes(2),{timeout:2000});expect(onChange.mock.calls[1][0].monthlyNeeds).toBe("70000");
 });
+
+test("starting Blueprint skips the duplicate welcome without changing saved figures", () => {
+ const onChange=vi.fn();const memory=memoryFromAssessment(complete(),null,0);
+ const view=render(<NetworthAssessment startAtBlueprint memory={memory} onChange={onChange}/>);
+ expect(screen.getByRole("heading",{name:"What income do you take home?"})).toBeTruthy();
+ expect(screen.queryByRole("button",{name:/Build My Networth Map/i})).toBeNull();
+ expect(onChange).not.toHaveBeenCalled();
+ view.rerender(<NetworthAssessment startAtBlueprint memory={{...memory,data:{...memory.data,grossPersonalIncome:"3000000"}}} onChange={onChange}/>);
+ expect(screen.getByRole("heading",{name:"What income do you take home?"})).toBeTruthy();
+ expect(onChange).not.toHaveBeenCalled();
+});
