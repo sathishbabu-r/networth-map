@@ -3611,7 +3611,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
 
 
 // Share the original welcome screen with the app entry point.
-export function NetworthWelcome({onBuild, buttonLabel = "Build My Networth Map", disabled = false, authMessage = "", authRedirect = ""}: {onBuild: () => void; buttonLabel?: string; disabled?: boolean; authMessage?: string; authRedirect?: string}) {
+export function NetworthWelcome({onBuild, buttonLabel = "Build My Networth Map", disabled = false, authMessage = ""}: {onBuild: () => void; buttonLabel?: string; disabled?: boolean; authMessage?: string}) {
   return (
         <section className="welcome">
           <div className="hero-copy">
@@ -3634,7 +3634,6 @@ export function NetworthWelcome({onBuild, buttonLabel = "Build My Networth Map",
               {buttonLabel} <span aria-hidden="true">→</span>
             </button>
             {authMessage && <p id="start-auth-status" role="status">{authMessage}</p>}
-            {authRedirect && <p role="status">If Google has not opened, <a href={authRedirect}>Continue to Google</a>.</p>}
             <small>
               Remembered privately in your account;
               an optional email is requested only after your result.
