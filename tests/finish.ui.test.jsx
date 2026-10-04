@@ -294,3 +294,16 @@ test("MAP financial facts are not saved before Confirm; Edit discards the propos
  await send("Correction: my needs are sixty thousand per month.");
  expect(state.saved.content.map.data.monthlyNeeds).toBe("60000");expect(state.saveCalls).toBe(1);
 });
+
+ test("unavailable Google sign-in explains the disabled start immediately below it", async () => {
+ const original = actions["coach:status"];
+ actions["coach:status"] = async () => ({google:false,coach:true,speech:true});
+ try {
+ render(<App />);
+ const message = await screen.findByText("Google sign-in is temporarily unavailable. Please try again shortly.");
+ const start = screen.getByRole("button",{name:"Build My Networth MAP"});
+ expect(start.disabled).toBe(true);
+ expect(start.nextElementSibling).toBe(message);
+ expect(start.getAttribute("aria-describedby")).toBe(message.id);
+ } finally { actions["coach:status"] = original; }
+ });

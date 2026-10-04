@@ -429,7 +429,7 @@ export function App() {
           <span>Blueprint → Vision → MAP</span>
         )}
       </header>
-      {error && (
+      {error && (isAuthenticated || building) && (
         <p className="error page-error" role="alert">
           {error}
         </p>
@@ -444,6 +444,7 @@ export function App() {
             <main className="shell">
               <NetworthWelcome
                 buttonLabel={busy ? "Opening Google…" : isAuthenticated ? "Continue My MAP" : "Build My Networth MAP"}
+                authMessage={!isAuthenticated ? error || (setup && !setup.google ? "Google sign-in is temporarily unavailable. Please try again shortly." : "") : ""}
                 disabled={busy || (isAuthenticated ? remembered === undefined : !setup?.google)}
                 onBuild={async () => {
                   if (isAuthenticated) { setOpened(true); setBuilding(true); return; }
@@ -458,7 +459,6 @@ export function App() {
               <summary>Privacy &amp; data</summary>
               <p>Your answers are processed by Convex and an AI provider. Voice uses OpenAI to turn recordings into text. This app saves only financial context and commitments from your answers automatically, plus change history. Raw audio and full conversations are not retained by this app. Provider retention has not been verified. Your remembered information can be exported or deleted.</p>
             </details>}
-            {setup && !setup.google && !isAuthenticated && <p role="status">Google sign-in is waiting for the app’s Google connection to be configured.</p>}
             {setup && (!setup.coach || !setup.speech) && <p role="status">{!setup.coach ? "The AI coach is not connected yet. " : ""}{!setup.speech ? "Voice is waiting for its speech service connection." : ""}</p>}
           </div>}
           {isAuthenticated && <div hidden={!building}>{opened && <Huddle key="signed-in" />}</div>}
