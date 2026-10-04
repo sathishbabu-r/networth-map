@@ -29,8 +29,3 @@ main.integrated-workspace{padding:0;grid-template-columns:minmax(0,7fr) minmax(0
 .thread-intro{font-size:14px;color:#5b665f;margin:-14px 0 20px}
 
 .map-entry .entry-privacy{padding:16px 32px;max-width:75ch;margin:auto;font-size:12px}.map-entry .entry-privacy>summary{text-align:center}
-
-.map-entry .blueprint-entry{max-width:620px;margin:0 auto;padding:clamp(32px,7vh,80px) 28px;min-height:calc(100dvh - 80px)}
-.map-entry .blueprint-entry h1{font-size:clamp(32px,5vw,46px);line-height:1.15;color:var(--navy);font-weight:400;margin:0 0 24px}
-.map-entry .blueprint-entry .quick-start-list{margin:28px 0}
-.map-entry .blueprint-entry>.primary{width:100%}

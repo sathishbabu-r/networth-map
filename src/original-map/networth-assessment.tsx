@@ -666,7 +666,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
     submitCompletedMapEmail,
   } = useProductInsights();
   const [step, setStep] = useState(memory?.step || (startAtBlueprint ? 1 : 0));
-  const [showQuickStart, setShowQuickStart] = useState(false);
+  const [showQuickStart, setShowQuickStart] = useState(startAtBlueprint);
   const [data, setData] = useState<AssessmentData>(() => assessmentFromMemory(memory));
   const draftStatus=useRef(onDraftStatus);draftStatus.current=onDraftStatus;
   const received = useRef(JSON.stringify(memory));
@@ -3484,10 +3484,10 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
               onClick={() => {
                 setShowQuickStart(false);
                 track("assessment_started", { step: 0 });
-                go(1);
+                if (step === 0) go(1);
               }}
             >
-              Start My Blueprint <span>→</span>
+              Start My Blueprint <span aria-hidden="true">→</span>
             </button>
           </div>
         </div>

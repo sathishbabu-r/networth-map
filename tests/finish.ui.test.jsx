@@ -241,15 +241,14 @@ test("a financial correction keeps the remembered action and continues the conve
  test("Networth MAP home leads into Huddle and home navigation preserves the draft", async () => {
   state.signedIn=true; render(<App />);
   expect(await screen.findByRole("heading",{name:"Your best estimates are enough."})).toBeTruthy();
-  expect(screen.queryByRole("button",{name:"Send message"})).toBeNull();
+  expect(screen.getByRole("dialog",{name:"Your best estimates are enough."})).toBeTruthy();
   await openMap();
   expect(screen.getByRole("heading",{name:"My Money Huddle"})).toBeTruthy();
   expect(screen.queryByRole("button",{name:/Build My Networth Map/i})).toBeNull();
   expect(screen.getByRole("heading",{name:"What income do you take home?"})).toBeTruthy();
   fireEvent.change(screen.getByLabelText("Review your words, or type instead"),{target:{value:"My next step"}});
   fireEvent.click(screen.getByRole("link",{name:"Networth MAP"}));
-  expect(screen.getByRole("button",{name:"Start My Blueprint"})).toBeTruthy();
-  await openMap();
+  fireEvent.click(screen.getByRole("button",{name:"Continue My MAP"}));
   expect(screen.getByDisplayValue("My next step")).toBeTruthy();
 });
 
@@ -261,5 +260,5 @@ test("public MAP home starts Google sign-in before showing Start My Blueprint", 
  expect(await screen.findByRole("button",{name:"Start My Blueprint"})).toBeTruthy();
  expect(screen.queryByRole("heading",{name:/Your wealth/})).toBeNull();
  expect(screen.getByRole("heading",{name:"Your best estimates are enough."})).toBeTruthy();
- expect(screen.queryByRole("button",{name:"Send message"})).toBeNull();
+ expect(screen.getByRole("dialog",{name:"Your best estimates are enough."})).toBeTruthy();
 });

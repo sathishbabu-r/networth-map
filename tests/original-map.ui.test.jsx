@@ -49,3 +49,13 @@ test("starting Blueprint skips the duplicate welcome without changing saved figu
  expect(screen.getByRole("heading",{name:"What income do you take home?"})).toBeTruthy();
  expect(onChange).not.toHaveBeenCalled();
 });
+
+test("original Blueprint popup closes onto income without restarting a remembered MAP", () => {
+ const onChange=vi.fn();
+ const view=render(<NetworthAssessment startAtBlueprint memory={memoryFromAssessment(complete(),null,4)} onChange={onChange}/>);
+ expect(screen.getByRole("dialog",{name:"Your best estimates are enough."})).toBeTruthy();
+ fireEvent.click(screen.getByRole("button",{name:"Start My Blueprint"}));
+ expect(screen.queryByRole("dialog",{name:"Your best estimates are enough."})).toBeNull();
+ expect(screen.getByRole("heading",{name:"What does your life cost?"})).toBeTruthy();
+ expect(onChange).not.toHaveBeenCalled();
+});
