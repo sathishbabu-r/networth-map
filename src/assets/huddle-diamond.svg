@@ -1,17 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <defs>
+    <linearGradient id="rose-gold" x1="0" y1="0" x2=".85" y2="1">
+      <stop stop-color="#f3ddcb"/><stop offset=".48" stop-color="#d6aa94"/><stop offset="1" stop-color="#a57460"/>
+    </linearGradient>
+  </defs>
   <style>
-    .sparkle{transform-box:fill-box;transform-origin:center;animation:glitter 3.2s ease-in-out infinite}
-    .sparkle.second{animation-delay:1.1s}
-    @keyframes glitter{0%,100%{opacity:.55;transform:scale(.8)}45%{opacity:1;transform:scale(1.15)}}
+    .sparkle{transform-box:fill-box;transform-origin:center;animation:glitter 3.8s ease-in-out infinite}
+    .sparkle.second{animation-delay:1.4s}
+    @keyframes glitter{0%,100%{opacity:.45;transform:scale(.85)}45%{opacity:1;transform:scale(1.08)}}
     @media(prefers-reduced-motion:reduce){.sparkle{animation:none}}
   </style>
-  <path d="M8 13 14 6h12l6 7-12 23Z" fill="#ec6eaa" stroke="#bb397b" stroke-width="1.2" stroke-linejoin="round"/>
-  <path d="m8 13 6-7 3 7Zm18-7 6 7h-9Z" fill="#ffc4e1"/>
-  <path d="m14 6 3 7h6l3-7Z" fill="#fff0f8"/>
-  <path d="m8 13 12 23-3-23Zm15 0-3 23 12-23Z" fill="#d74992"/>
-  <path d="m17 13 3 23 3-23Z" fill="#ff98cb"/>
-  <path d="M8 13h24M14 6l3 7 3 23 3-23 3-7" fill="none" stroke="#b83175" stroke-width=".7" stroke-linejoin="round"/>
-  <path class="sparkle" d="m32 2 1.1 3.4L37 6.5l-3.9 1.1L32 11l-1.1-3.4L27 6.5l3.9-1.1Z" fill="#e84399"/>
-  <path class="sparkle second" d="m6 23 .8 2.4 2.7.8-2.7.8L6 29.4l-.8-2.4-2.7-.8 2.7-.8Z" fill="#ef80b7"/>
-  <path class="sparkle second" d="m16 9 .5 1.6 1.8.5-1.8.5-.5 1.6-.5-1.6-1.8-.5 1.8-.5Z" fill="#fff"/>
+  <path d="m5 15 7-8h16l7 8-15 19Z" fill="url(#rose-gold)" stroke="#9d715f" stroke-width=".9" stroke-linejoin="round"/>
+  <path d="m5 15 7-8 3 8Zm23-8 7 8H25Z" fill="#e8c4ae"/>
+  <path d="m12 7 3 8h10l3-8Z" fill="#f6e5d6"/>
+  <path d="m5 15 15 19-5-19Z" fill="#b9846c"/>
+  <path d="m25 15-5 19 15-19Z" fill="#c8947c"/>
+  <path d="m15 15 5 19 5-19Z" fill="url(#rose-gold)"/>
+  <path d="M5 15h30M12 7l3 8 5 19 5-19 3-8" fill="none" stroke="#a67964" stroke-width=".65" stroke-linejoin="round"/>
+  <path class="sparkle" d="m34 2 .7 2.7 2.8.8-2.8.8L34 9l-.7-2.7-2.8-.8 2.8-.8Z" fill="#c49a7d"/>
+  <path class="sparkle second" d="m5 25 .5 1.8 1.9.5-1.9.5L5 29.6l-.5-1.8-1.9-.5 1.9-.5Z" fill="#d3b094"/>
+  <path class="sparkle second" d="m15 10 .4 1.3 1.4.4-1.4.4-.4 1.3-.4-1.3-1.4-.4 1.4-.4Z" fill="#fff7ed"/>
 </svg>

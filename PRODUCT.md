@@ -180,7 +180,7 @@ Welcome description:
 
 > Know your wealth. Define your vision. Make your next move with clarity.
 
-The conversational companion is called **Money Huddle**, represented by a pink diamond icon with a subtle sparkle. Its tagline remains:
+The conversational companion is called **Money Huddle**, represented by a rose-gold diamond icon with a subtle sparkle. Its tagline remains:
 
 > Your Vision. Your Wealth. Your Next Move.
 
@@ -314,7 +314,7 @@ The full acceptance check is the real published journey on desktop and mobile:
 
 Run `npm run test:browser` to open a separate sample-data preview at `http://127.0.0.1:5174`. It renders the real interface with simulated sign-in, coaching and in-memory saving. It does not connect to Google, OpenAI or the production database, and cannot access user accounts. Reload resets its sample data.
 
-The sample preview has been checked at desktop and mobile viewport sizes: opening the assessment, sending an answer, correcting it, and viewing the pink diamond and readable glass chat. These checks do not prove production authentication, real AI responses or production persistence. The normal deployment excludes the sample preview and retains Google authentication.
+The sample preview has been checked at desktop and mobile viewport sizes: opening the assessment, sending an answer, correcting it, and viewing the rose-gold diamond and readable glass chat. These checks do not prove production authentication, real AI responses or production persistence. The normal deployment excludes the sample preview and retains Google authentication.
 
 ## Commercial validation
 
