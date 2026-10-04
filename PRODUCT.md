@@ -4,11 +4,11 @@ Updated: 4 October 2026.
 
 Live application: https://lovely-lapwing-356.convex.site
 
-This document describes the current product and its agreed boundaries. It replaces the earlier Huddle-only description. The approved expansion is recorded in [MAP_HUDDLE_SCOPE.md](docs/MAP_HUDDLE_SCOPE.md).
+This document describes the current product, its agreed boundaries and explicitly marked requirements that are not yet implemented. It replaces the earlier Huddle-only description. The approved expansion is recorded in [MAP_HUDDLE_SCOPE.md](docs/MAP_HUDDLE_SCOPE.md).
 
 ## The job
 
-Help a person understand their financial position, define what they want, and choose a practical next action.
+> When my daughter's school fees are due and I need to arrange the money, I want to know what money I can actually access before the deadline and how I will cover any shortfall, so I can get the fees paid on time without creating another financial problem.
 
 The method remains:
 
@@ -20,13 +20,155 @@ The method remains:
 
 Networth MAP provides the structured assessment. Money Huddle provides a conversation alongside it, helping users explain their answers, clarify missing information, choose a goal and follow through.
 
+## School-fees completion rules
+
+Agreed on 4 October 2026. These are product requirements, not a claim that the dedicated funding flow or its statuses are already implemented. They supersede “one goal + one action” as the completion measure for this use case.
+
+### Huddle completion: a viable funding plan
+
+Start with:
+
+> School fees are due and I don't know how I'm going to arrange the money.
+
+The immediate outcome is:
+
+**Amount due → Deadline → Available cash → Expected-but-unconfirmed cash → Other commitments → Funding gap → Chosen funding action**
+
+The user should know what is due, when it is due, what money is actually accessible before that date, which receipts remain uncertain, what other commitments compete for that cash, and what action they will take to close the gap.
+
+Do not count inaccessible assets or expected-but-unconfirmed receipts as available cash. Account for other commitments when establishing what cash is available for the fees.
+
+Illustrative example supplied by the builder; these are not Ratheesh's verified figures:
+
+- School fee: ₹3 lakh, due Friday.
+- Accessible cash before Friday: ₹1.5 lakh.
+- Expected customer receipt: ₹1 lakh, not guaranteed.
+- Gap against confirmed accessible cash: at least ₹1.5 lakh; other commitments may increase it.
+- Chosen action: Call Ravi today to arrange ₹1.5 lakh.
+- Repayment terms: to be confirmed.
+
+### Focus on the present issue; complete the MAP progressively
+
+Agreed rule: the user does not have to complete the full Networth MAP before working through the school-fees need. Huddle asks only for information necessary to understand this issue, establish the funding gap and test the chosen plan.
+
+Huddle both challenges assumptions and guides the user towards a practical next step. Help them organise what is known, identify gaps, compare the options they raise, and choose a specific action and date. Explain supported calculations and trade-offs clearly; do not invent funding sources, guarantee approval or make the choice for them.
+
+Use useful questions to challenge assumptions without making the decision for the user. For example:
+
+- Is that money actually accessible before the school-fees deadline?
+- What other payments must that same money cover?
+- If the expected receipt or future loan does not arrive, how will you repay your friend?
+- What repayment terms have actually been agreed, and what remains unknown?
+
+These are examples, not a fixed questionnaire. Ask one relevant question at a time and use answers already remembered in the MAP.
+
+Continue encouraging the user to complete and update the wider MAP over time, without delaying the immediate plan for unrelated assessment sections. Missing information material to the plan must remain visible; do not claim the plan is viable when a necessary funding or repayment assumption is unresolved.
+
+### Insights during MAP building; a comprehensive plan after completion
+
+While the MAP is being built, use the user's responses and supported financial calculations to provide relevant insights and ask qualifying questions. These questions clarify amounts, timing, assumptions and missing context. Explain the basis of each insight and keep estimates and unknowns visible; do not wait for full MAP completion to provide useful help on the present issue.
+
+Once the MAP is complete, use its confirmed context together with the financial guidance repository to develop a comprehensive action plan with the user. The repository's contents and approved guidance boundaries still need to be identified. Do not claim this repository-backed planning stage is already implemented.
+
+Repository guidance must remain distinguishable from the user's financial facts. It must not override confirmed answers, invent missing inputs or replace the existing MAP calculation rules. The user chooses actions; important AI-proposed financial changes still require confirmation.
+
+The comprehensive plan is a later stage. It does not make a completed MAP a prerequisite for the immediate school-fees funding plan or close unresolved funding and repayment risks.
+
+### Borrowing and unresolved repayment risk
+
+Ratheesh may accept borrowing terms because the fees are urgent, repay his friend later using a home-loan top-up or personal loan, and seek a higher-interest loan from a non-bank lender if a bank declines. These are possible choices described by the builder, not recommendations or confirmed approvals.
+
+Agreed rule: Huddle must show the repayment risk and keep it unresolved even if he chooses to proceed. Acceptance of terms does not establish that repayment is affordable. A hoped-for future loan must not be treated as approved funding or a confirmed repayment source.
+
+Record any known repayment amount, interest, due dates and proposed repayment source. Keep missing terms and unapproved funding visibly uncertain. The user chooses whether to proceed; Huddle must not mark the repayment risk resolved merely because they accepted it.
+
+Track fee payment separately from repayment risk. “Fees paid” can be recorded when the user confirms payment, while the borrowing obligation and repayment risk remain open. Do not claim “without creating another financial problem” solely because the fee was paid.
+
+Until funding availability and repayment terms are clarified, the plan remains provisional rather than a demonstrated viable funding plan.
+
+### Financial completion: follow through to payment
+
+Track the open need through:
+
+**Need identified → Plan chosen → Action taken → Funding confirmed → Money received → Fee paid**
+
+A conversation ending does not close the financial need. Arranging funding is a milestone; the school-fees job is complete only when the school has received the required payment.
+
+At the next Huddle, ask whether the planned money arrived. If it has not arrived, keep the need open. If it has arrived, clarify whether it is a loan, gift or another source, propose the appropriate MAP updates, and capture any repayment obligation. Important proposed financial changes require user confirmation.
+
+This is follow-up within a returning Huddle, not approval to add automatic reminders or messages.
+
+### Rule: never confuse a plan, promise or action with a financial outcome
+
+| User statement | What it establishes |
+| --- | --- |
+| “I'll call my friend.” | A commitment. |
+| “My friend agreed.” | Expected funding; no receipt yet. |
+| “₹1.5 lakh reached my account.” | Money received, as reported and confirmed by the user. |
+| “The friend expects repayment.” | A liability whose amount and terms must be captured. |
+| “School received ₹3 lakh.” | The fee-payment outcome, if it covers the amount due. |
+
+User-confirmed outcomes are not independently verified bank or school transactions. Partial funding or partial payment must not mark the whole need complete. Preserve the distinction between source promises, receipts, liabilities and payment; do not double count the same money.
+
 ## The user
 
-The initial pilot user is **Ratheesh**, a business owner whose income, assets, loans, expenses and family commitments are spread across different places.
+The first person we serve is someone with an expense coming due who needs to arrange money, has financial information scattered across different places, and keeps postponing a review.
+
+The initial pilot user is **Ratheesh**. The builder confirmed an actual occasion: his daughter’s school fees were due, and he would call his friend to arrange the money.
+
+He has also asked his family to review his spending and reduce expenses. He feels restless about spending more than his income for a few days, then gets on with his routine.
+
+**How he wants to feel:** Relieved that they’ve arranged the money for their daughter’s school fees.
+
+This is the first situation to validate. It does not establish that the product has helped him arrange money or guarantee that it can do so.
 
 The welcome screen introduces a guided 20-minute financial clarity assessment. Exact figures, best estimates and unknown information must remain distinguishable. Users should not need perfect records to begin.
 
-The original Money Huddle pilot target remains a useful conversation leading to one chosen goal and one dated action within 15 minutes. This is a validation target, not a measured result.
+The original general Money Huddle pilot target was one chosen goal and one dated action within 15 minutes. For the school-fees use case, the completion rules above require a viable funding plan, followed separately through to fee payment. Neither completion nor the time target has been measured.
+
+## What the product replaces
+
+In the confirmed school-fees situation, Ratheesh calls a friend to arrange money. For reviewing spending, he asks family members to help, or postpones the review as his routine takes over.
+
+The broader alternatives identified for the product are spreadsheets or Excel, scattered bank and investment statements, WhatsApp notes, conversations with a CA, spouse or adviser, and mental tracking. These have not all been confirmed as Ratheesh’s own habits.
+
+Networth MAP should reduce the effort of gathering and understanding this information. Money Huddle supports reflection and follow-through; the user remains the decision-maker.
+
+## Why the user starts — and why they hesitate
+
+**What is going wrong now:**
+
+> My financial information is scattered. I know there are things I should act on, but I don't have one clear picture or a simple way to know what to do next.
+
+**The risk they feel in trying the product:**
+
+> This is going to take too much time, I won't have all the numbers, and I'm not sure I want an AI making decisions about my money.
+
+These are product hypotheses to validate with pilot users, rather than findings from completed research.
+
+## How the product responds
+
+| User problem | Product response |
+| --- | --- |
+| Financial information is scattered. | Networth MAP brings it into one financial picture. |
+| Getting started feels like work. | An assisted first MAP accepts estimates and “I don't know”. |
+| The user does not know what matters next. | Money Huddle uses the MAP and supported insights for a contextual conversation. |
+| The user keeps postponing action. | Huddle helps them choose one small, specific, dated action. |
+| The user forgets or struggles to follow through. | The next Huddle remembers the commitment and asks what happened. |
+| The MAP becomes outdated. | The user can update it through conversation: AI proposes financial changes, the user confirms or edits, then the MAP updates. |
+| The user does not trust AI with money. | AI does not make decisions for them. Important proposed financial changes require confirmation, and calculations remain transparent. |
+
+The confirmation promise applies to AI-proposed financial changes. Direct assessment entries are saved as the user makes them; goals and commitments follow the saving rules below.
+
+## The worry onboarding must remove
+
+> I don't have all my financial information ready — can I still start?
+
+The product's answer should be immediate:
+
+> Yes. Start with what you know. Estimates are fine, and you can complete and update your MAP over time.
+
+This is the agreed onboarding promise. Recording it here does not change the current screen copy or approve a redesign.
 
 ## Product identity
 

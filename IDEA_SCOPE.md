@@ -29,9 +29,109 @@ For this sprint, I will bring my method and questions but build the product fres
 
 # GOAL
 
-## The one goal they hire it for — money
+## The job they hire it for — money
 
-> **“Help me get clear about my finances and take a useful step towards a goal that matters to me.”**
+> **“When my daughter's school fees are due and I need to arrange the money, I want to know what money I can actually access before the deadline and how I will cover any shortfall, so I can get the fees paid on time without creating another financial problem.”**
+
+This job sentence passes all three checks: it makes sense without the product, names an observable moment, and contains exactly one “so I can” outcome in the user's words.
+
+## How they feel now
+
+Ratheesh feels restless because he is spending more than his income. The feeling lasts for a few days, then he gets on with his routine.
+
+## How they want to feel
+
+Relieved that they’ve arranged the money for their daughter’s school fees.
+
+## School-fees completion rules
+
+Agreed on 4 October 2026. These are product requirements, not a claim that the dedicated funding flow or its statuses are already implemented. They supersede “one goal + one action” as the completion measure for this use case.
+
+### Huddle completion: a viable funding plan
+
+Start with:
+
+> School fees are due and I don't know how I'm going to arrange the money.
+
+The immediate outcome is:
+
+**Amount due → Deadline → Available cash → Expected-but-unconfirmed cash → Other commitments → Funding gap → Chosen funding action**
+
+The user should know what is due, when it is due, what money is actually accessible before that date, which receipts remain uncertain, what other commitments compete for that cash, and what action they will take to close the gap.
+
+Do not count inaccessible assets or expected-but-unconfirmed receipts as available cash. Account for other commitments when establishing what cash is available for the fees.
+
+Illustrative example supplied by the builder; these are not Ratheesh's verified figures:
+
+- School fee: ₹3 lakh, due Friday.
+- Accessible cash before Friday: ₹1.5 lakh.
+- Expected customer receipt: ₹1 lakh, not guaranteed.
+- Gap against confirmed accessible cash: at least ₹1.5 lakh; other commitments may increase it.
+- Chosen action: Call Ravi today to arrange ₹1.5 lakh.
+- Repayment terms: to be confirmed.
+
+### Focus on the present issue; complete the MAP progressively
+
+Agreed rule: the user does not have to complete the full Networth MAP before working through the school-fees need. Huddle asks only for information necessary to understand this issue, establish the funding gap and test the chosen plan.
+
+Huddle both challenges assumptions and guides the user towards a practical next step. Help them organise what is known, identify gaps, compare the options they raise, and choose a specific action and date. Explain supported calculations and trade-offs clearly; do not invent funding sources, guarantee approval or make the choice for them.
+
+Use useful questions to challenge assumptions without making the decision for the user. For example:
+
+- Is that money actually accessible before the school-fees deadline?
+- What other payments must that same money cover?
+- If the expected receipt or future loan does not arrive, how will you repay your friend?
+- What repayment terms have actually been agreed, and what remains unknown?
+
+These are examples, not a fixed questionnaire. Ask one relevant question at a time and use answers already remembered in the MAP.
+
+Continue encouraging the user to complete and update the wider MAP over time, without delaying the immediate plan for unrelated assessment sections. Missing information material to the plan must remain visible; do not claim the plan is viable when a necessary funding or repayment assumption is unresolved.
+
+### Insights during MAP building; a comprehensive plan after completion
+
+While the MAP is being built, use the user's responses and supported financial calculations to provide relevant insights and ask qualifying questions. These questions clarify amounts, timing, assumptions and missing context. Explain the basis of each insight and keep estimates and unknowns visible; do not wait for full MAP completion to provide useful help on the present issue.
+
+Once the MAP is complete, use its confirmed context together with the financial guidance repository to develop a comprehensive action plan with the user. The repository's contents and approved guidance boundaries still need to be identified. Do not claim this repository-backed planning stage is already implemented.
+
+Repository guidance must remain distinguishable from the user's financial facts. It must not override confirmed answers, invent missing inputs or replace the existing MAP calculation rules. The user chooses actions; important AI-proposed financial changes still require confirmation.
+
+The comprehensive plan is a later stage. It does not make a completed MAP a prerequisite for the immediate school-fees funding plan or close unresolved funding and repayment risks.
+
+### Borrowing and unresolved repayment risk
+
+Ratheesh may accept borrowing terms because the fees are urgent, repay his friend later using a home-loan top-up or personal loan, and seek a higher-interest loan from a non-bank lender if a bank declines. These are possible choices described by the builder, not recommendations or confirmed approvals.
+
+Agreed rule: Huddle must show the repayment risk and keep it unresolved even if he chooses to proceed. Acceptance of terms does not establish that repayment is affordable. A hoped-for future loan must not be treated as approved funding or a confirmed repayment source.
+
+Record any known repayment amount, interest, due dates and proposed repayment source. Keep missing terms and unapproved funding visibly uncertain. The user chooses whether to proceed; Huddle must not mark the repayment risk resolved merely because they accepted it.
+
+Track fee payment separately from repayment risk. “Fees paid” can be recorded when the user confirms payment, while the borrowing obligation and repayment risk remain open. Do not claim “without creating another financial problem” solely because the fee was paid.
+
+Until funding availability and repayment terms are clarified, the plan remains provisional rather than a demonstrated viable funding plan.
+
+### Financial completion: follow through to payment
+
+Track the open need through:
+
+**Need identified → Plan chosen → Action taken → Funding confirmed → Money received → Fee paid**
+
+A conversation ending does not close the financial need. Arranging funding is a milestone; the school-fees job is complete only when the school has received the required payment.
+
+At the next Huddle, ask whether the planned money arrived. If it has not arrived, keep the need open. If it has arrived, clarify whether it is a loan, gift or another source, propose the appropriate MAP updates, and capture any repayment obligation. Important proposed financial changes require user confirmation.
+
+This is follow-up within a returning Huddle, not approval to add automatic reminders or messages.
+
+### Rule: never confuse a plan, promise or action with a financial outcome
+
+| User statement | What it establishes |
+| --- | --- |
+| “I'll call my friend.” | A commitment. |
+| “My friend agreed.” | Expected funding; no receipt yet. |
+| “₹1.5 lakh reached my account.” | Money received, as reported and confirmed by the user. |
+| “The friend expects repayment.” | A liability whose amount and terms must be captured. |
+| “School received ₹3 lakh.” | The fee-payment outcome, if it covers the amount due. |
+
+User-confirmed outcomes are not independently verified bank or school transactions. Partial funding or partial payment must not mark the whole need complete. Preserve the distinction between source promises, receipts, liabilities and payment; do not double count the same money.
 
 ## Delta 4 — the steps today → the steps with my product
 
@@ -39,13 +139,15 @@ For this sprint, I will bring my method and questions but build the product fres
 
 Collect statements → ask the accountant → enter figures in a spreadsheet → work out priorities → decide what to do → remember to follow up.
 
-### With My Money Huddle
+### Earlier general Huddle flow
+
+The school-fees completion rules above replace this general flow’s goal-and-action endpoint for that use case.
 
 Answer a question by speaking or typing → confirm the starting snapshot → see a simple formula-based insight where the data supports one → choose one goal → commit to one action.
 
 My existing MAP takes about 30 minutes to complete.
 
-The first-session target here is narrower:
+The original general first-session target was:
 
 **One confirmed starting snapshot + one chosen goal + one action within 15 minutes.**
 
@@ -71,9 +173,11 @@ A business owner with income, assets, loans and family commitments spread across
 
 ## The trigger
 
-> **“I have things I need to sort out financially, but I keep putting them off.”**
+Ratheesh's daughter’s school fees were due, and he needed to arrange the money.
 
-It could be an outstanding payment, an upcoming expense, a loan commitment or a goal they have not acted on.
+The builder confirmed this was an actual experience: Ratheesh would call his friend to arrange money. Calling a friend is his current response to this situation.
+
+He also puts off reviewing his finances amid his daily routines and has asked his family to review his spending and reduce expenses. The school-fees deadline is the concrete starting moment for this job.
 
 ## Today’s path, step by step
 
