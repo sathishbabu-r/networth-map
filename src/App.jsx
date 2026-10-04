@@ -393,7 +393,7 @@ export function App() {
   const remembered = useQuery(api.huddles.current, isAuthenticated ? {} : "skip");
   const [building, setBuilding] = useState(false);
   const [opened, setOpened] = useState(false);
-  useEffect(() => { if (!isAuthenticated) { setBuilding(false); setOpened(false); } else { setOpened(true); setBuilding(true); } }, [isAuthenticated]);
+  useEffect(() => { if (!isAuthenticated) { setBuilding(false); setOpened(false); } }, [isAuthenticated]);
   const [setup, setSetup] = useState(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -443,7 +443,7 @@ export function App() {
           {!building && <div className="original-map map-entry">
             <main className="shell">
               <NetworthWelcome
-                buttonLabel={busy ? "Opening Google…" : isAuthenticated ? "Continue My MAP" : "Build My Networth MAP"}
+                buttonLabel={isAuthenticated && (remembered || opened) ? "Continue My MAP" : "Build My Networth MAP"}
                 authMessage={!isAuthenticated ? error || (setup && !setup.google ? "Google sign-in is temporarily unavailable. Please try again shortly." : "") : ""}
                 disabled={busy || (isAuthenticated ? remembered === undefined : !setup?.google)}
                 onBuild={async () => {

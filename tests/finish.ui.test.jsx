@@ -118,6 +118,9 @@ const fact = (key, label, amount) => ({
   note: "Current balances",
 });
 async function openMap() {
+  const start = await screen.findByRole("button", {name:/^(Build My Networth MAP|Continue My MAP)$/});
+  await waitFor(() => expect(start.disabled).toBe(false));
+  fireEvent.click(start);
   fireEvent.click(await screen.findByRole("button", {name:"Start My Blueprint"}));
   fireEvent.click(await screen.findByRole("button", {name:"Open Money Huddle"}));
 }
@@ -244,8 +247,8 @@ test("a financial correction keeps the remembered action and continues the conve
 
  test("Networth MAP home leads into Huddle and home navigation preserves the draft", async () => {
   state.signedIn=true; render(<App />);
-  expect(await screen.findByRole("heading",{name:"Your best estimates are enough."})).toBeTruthy();
-  expect(screen.getByRole("dialog",{name:"Your best estimates are enough."})).toBeTruthy();
+  expect(await screen.findByRole("heading",{name:/Your wealth/})).toBeTruthy();
+  expect(screen.queryByRole("dialog",{name:"Your best estimates are enough."})).toBeNull();
   await openMap();
   expect(screen.getByRole("heading",{name:"Money Huddle"})).toBeTruthy();
   expect(screen.queryByRole("button",{name:/Build My Networth Map/i})).toBeNull();
@@ -261,6 +264,12 @@ test("public MAP home starts Google sign-in before showing Start My Blueprint", 
  expect(screen.getByRole("heading",{name:/Your wealth/})).toBeTruthy();
  expect(screen.queryByRole("button",{name:"Start My Blueprint"})).toBeNull();
  fireEvent.click(await screen.findByRole("button",{name:"Build My Networth MAP"}));
+ await screen.findByRole("button",{name:"Log out"});
+ expect(screen.getByRole("heading",{name:/Your wealth/})).toBeTruthy();
+ expect(screen.queryByRole("button",{name:"Start My Blueprint"})).toBeNull();
+ const start = screen.getByRole("button",{name:"Build My Networth MAP"});
+ await waitFor(() => expect(start.disabled).toBe(false));
+ fireEvent.click(start);
  expect(await screen.findByRole("button",{name:"Start My Blueprint"})).toBeTruthy();
  expect(screen.queryByRole("heading",{name:/Your wealth/})).toBeNull();
  expect(screen.getByRole("heading",{name:"Your best estimates are enough."})).toBeTruthy();
