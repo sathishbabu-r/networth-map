@@ -64,15 +64,13 @@ These are examples, not a fixed questionnaire. Ask one relevant question at a ti
 
 Continue encouraging the user to complete and update the wider MAP over time, without delaying the immediate plan for unrelated assessment sections. Missing information material to the plan must remain visible; do not claim the plan is viable when a necessary funding or repayment assumption is unresolved.
 
-### Insights during MAP building; a comprehensive plan after completion
+### Current answer flow: ask, answer, Send
 
-While the MAP is being built, use the user's responses and supported financial calculations to provide relevant insights and ask qualifying questions. These questions clarify amounts, timing, assumptions and missing context. Explain the basis of each insight and keep estimates and unknowns visible; do not wait for full MAP completion to provide useful help on the present issue.
+Updated on 4 October 2026. This replaces the earlier confirmation-card requirement and the proposal to display insights during MAP building.
 
-Once the MAP is complete, use its confirmed context together with the financial guidance repository to develop a comprehensive action plan with the user. The repository's contents and approved guidance boundaries still need to be identified. Do not claim this repository-backed planning stage is already implemented.
+Ask one relevant question. The user types an answer or reviews and edits a voice transcript, then presses Send. The first answer sends without a “Before we talk” popup; processing information remains available in Privacy & data. Sending remembers explicitly supplied information; there is no extra Confirm/Edit button or insight card in Huddle. Clarify material ambiguity before updating rather than inventing an interpretation. Users can send a correction later. If saving fails, retain their answer and show the error so they can retry.
 
-Repository guidance must remain distinguishable from the user's financial facts. It must not override confirmed answers, invent missing inputs or replace the existing MAP calculation rules. The user chooses actions; important AI-proposed financial changes still require confirmation.
-
-The comprehensive plan is a later stage. It does not make a completed MAP a prerequisite for the immediate school-fees funding plan or close unresolved funding and repayment risks.
+Once the MAP is complete, the proposed repository-backed comprehensive action plan remains a later requirement, not a claim of implementation. Keep its guidance separate from user facts and preserve existing calculation rules.
 
 ### Borrowing and unresolved repayment risk
 
@@ -94,7 +92,7 @@ Track the open need through:
 
 A conversation ending does not close the financial need. Arranging funding is a milestone; the school-fees job is complete only when the school has received the required payment.
 
-At the next Huddle, ask whether the planned money arrived. If it has not arrived, keep the need open. If it has arrived, clarify whether it is a loan, gift or another source, propose the appropriate MAP updates, and capture any repayment obligation. Important proposed financial changes require user confirmation.
+At the next Huddle, ask whether the planned money arrived. If it has not arrived, keep the need open. If it has arrived, clarify whether it is a loan, gift or another source, propose the appropriate MAP updates, and capture any repayment obligation. The user reviews or edits their answer and sends it; there is no separate financial confirmation card.
 
 This is follow-up within a returning Huddle, not approval to add automatic reminders or messages.
 
@@ -155,10 +153,10 @@ These are product hypotheses to validate with pilot users, rather than findings 
 | The user does not know what matters next. | Money Huddle uses the MAP and supported insights for a contextual conversation. |
 | The user keeps postponing action. | Huddle helps them choose one small, specific, dated action. |
 | The user forgets or struggles to follow through. | The next Huddle remembers the commitment and asks what happened. |
-| The MAP becomes outdated. | The user can update it through conversation: AI proposes financial changes, the user confirms or edits, then the MAP updates. |
-| The user does not trust AI with money. | AI does not make decisions for them. Important proposed financial changes require confirmation, and calculations remain transparent. |
+| The MAP becomes outdated. | The user can update it through conversation: the user edits and sends an answer or correction, then the MAP updates. |
+| The user does not trust AI with money. | AI does not make decisions for them. Only explicitly supplied information is remembered; ambiguity prompts a question, and calculations remain transparent. |
 
-The confirmation promise applies to AI-proposed financial changes. Direct assessment entries are saved as the user makes them; goals and commitments follow the saving rules below.
+Sending an answer is the user’s saving step. Direct assessment entries are saved as the user makes them; corrections remain available.
 
 ## The worry onboarding must remove
 
@@ -182,7 +180,7 @@ Welcome description:
 
 > Know your wealth. Define your vision. Make your next move with clarity.
 
-The conversational companion is called **Money Huddle**. Its tagline remains:
+The conversational companion is called **Money Huddle**, represented by a pink diamond icon with a subtle sparkle. Its tagline remains:
 
 > Your Vision. Your Wealth. Your Next Move.
 
@@ -229,19 +227,19 @@ The conversation should help the user:
 
 - Understand the current issue and relevant financial facts.
 - Clarify missing or ambiguous information.
-- See a formula-based observation when the available figures support it.
+- Continue with one useful question without displaying an insight card during answer collection.
 - Choose one goal and one practical, dated action.
 - Return to report what happened and decide their next step.
 
 The user chooses the goal and action. The agent does not make financial decisions on their behalf.
 
-The current application includes controls to open and minimise Money Huddle. This documents existing behaviour; further changes to its presentation require approval.
+The current application includes controls to open and minimise Money Huddle. Its chat panel has a translucent glass background with light blur so the MAP remains partly visible behind fully readable chat text and controls. Browsers without background-blur support use an opaque background. This documents existing behaviour; further changes to its presentation require approval.
 
 ## Saving and correcting information
 
 Assessment entries are remembered in the signed-in account as the user works.
 
-In conversation, proposed changes to financial amounts are shown for **Confirm** or **Edit** before they are saved. Goals, dated actions and other supported context updates are remembered without an additional financial review card when no financial amount changes require review.
+In conversation, the user reviews or edits their answer before Send. Sending remembers explicitly supplied financial answers, goals and actions without a separate confirmation card. Ambiguous information needs a clarifying question before an update.
 
 Users can correct remembered information through conversation. Saved changes have a revision history. Full conversation history and raw audio are not retained by the application.
 
@@ -273,7 +271,7 @@ One active dated action is supported, with previous changes and reported results
 
 Convex stores account information and financial context. The AI provider processes conversation inputs. OpenAI processes voice recordings into text.
 
-Explain processing before the first conversation. Application retention and provider retention are different; provider retention has not been verified, so do not promise that providers retain nothing.
+Explain processing in the accessible Privacy & data section without an interrupting first-message popup. Application retention and provider retention are different; provider retention has not been verified, so do not promise that providers retain nothing.
 
 Users can export their remembered information and delete their saved MAP, snapshot, goal, action and related history.
 

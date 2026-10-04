@@ -87,15 +87,13 @@ These are examples, not a fixed questionnaire. Ask one relevant question at a ti
 
 Continue encouraging the user to complete and update the wider MAP over time, without delaying the immediate plan for unrelated assessment sections. Missing information material to the plan must remain visible; do not claim the plan is viable when a necessary funding or repayment assumption is unresolved.
 
-### Insights during MAP building; a comprehensive plan after completion
+### Current answer flow: ask, answer, Send
 
-While the MAP is being built, use the user's responses and supported financial calculations to provide relevant insights and ask qualifying questions. These questions clarify amounts, timing, assumptions and missing context. Explain the basis of each insight and keep estimates and unknowns visible; do not wait for full MAP completion to provide useful help on the present issue.
+Updated on 4 October 2026. This replaces the earlier confirmation-card requirement and the proposal to display insights during MAP building.
 
-Once the MAP is complete, use its confirmed context together with the financial guidance repository to develop a comprehensive action plan with the user. The repository's contents and approved guidance boundaries still need to be identified. Do not claim this repository-backed planning stage is already implemented.
+Ask one relevant question. The user types an answer or reviews and edits a voice transcript, then presses Send. The first answer sends without a “Before we talk” popup; processing information remains available in Privacy & data. Sending remembers explicitly supplied information; there is no extra Confirm/Edit button or insight card in Huddle. Clarify material ambiguity before updating rather than inventing an interpretation. Users can send a correction later. If saving fails, retain their answer and show the error so they can retry.
 
-Repository guidance must remain distinguishable from the user's financial facts. It must not override confirmed answers, invent missing inputs or replace the existing MAP calculation rules. The user chooses actions; important AI-proposed financial changes still require confirmation.
-
-The comprehensive plan is a later stage. It does not make a completed MAP a prerequisite for the immediate school-fees funding plan or close unresolved funding and repayment risks.
+Once the MAP is complete, the proposed repository-backed comprehensive action plan remains a later requirement, not a claim of implementation. Keep its guidance separate from user facts and preserve existing calculation rules.
 
 ### Borrowing and unresolved repayment risk
 
@@ -117,7 +115,7 @@ Track the open need through:
 
 A conversation ending does not close the financial need. Arranging funding is a milestone; the school-fees job is complete only when the school has received the required payment.
 
-At the next Huddle, ask whether the planned money arrived. If it has not arrived, keep the need open. If it has arrived, clarify whether it is a loan, gift or another source, propose the appropriate MAP updates, and capture any repayment obligation. Important proposed financial changes require user confirmation.
+At the next Huddle, ask whether the planned money arrived. If it has not arrived, keep the need open. If it has arrived, clarify whether it is a loan, gift or another source, propose the appropriate MAP updates, and capture any repayment obligation. The user reviews or edits their answer and sends it; there is no separate financial confirmation card.
 
 This is follow-up within a returning Huddle, not approval to add automatic reminders or messages.
 

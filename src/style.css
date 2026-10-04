@@ -35,7 +35,7 @@ main.floating-workspace{display:block;grid-template-columns:none;grid-template-r
 .floating-workspace>.replica-pane{height:100%;max-height:none;border-right:0}
 .huddle-launcher{position:fixed;right:24px;bottom:24px;z-index:20;display:flex;align-items:center;gap:10px;padding:10px 16px;box-shadow:0 6px 24px #26312e24}
 .huddle-launcher .huddle-icon{width:32px;height:32px}
-.integrated-workspace .floating-huddle{position:fixed;right:24px;bottom:24px;z-index:30;width:min(440px,calc(100vw - 32px));height:min(720px,calc(100dvh - 112px));padding:24px 20px 14px;background:#faf9f6;border-radius:16px;box-shadow:0 12px 48px #26312e30}
+.integrated-workspace .floating-huddle{position:fixed;right:24px;bottom:24px;z-index:30;width:min(440px,calc(100vw - 32px));height:min(720px,calc(100dvh - 112px));padding:24px 20px 14px;background:rgba(250,249,246,.84);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:16px;box-shadow:0 12px 48px #26312e30}
 .floating-huddle[hidden],.huddle-launcher[hidden]{display:none!important}
 .floating-huddle .thread-identity{padding-right:32px}
 .huddle-minimise{position:absolute;right:12px;top:12px;padding:10px}
@@ -43,3 +43,5 @@ main.floating-workspace{display:block;grid-template-columns:none;grid-template-r
 .financial-review strong{font-weight:500}.financial-review small{display:block;color:#52645a}.financial-review .controls{margin-top:8px}.financial-review button{font-size:12px}
 @media(max-width:640px){.huddle-launcher{right:16px;bottom:16px}.integrated-workspace .floating-huddle{right:16px;bottom:16px;height:calc(100dvh - 96px);padding:20px 16px 12px}}
 @media print{.floating-huddle,.huddle-launcher{display:none!important}}
+
+@supports not ((backdrop-filter:blur(8px)) or (-webkit-backdrop-filter:blur(8px))){.integrated-workspace .floating-huddle{background:#faf9f6}}

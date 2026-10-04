@@ -79,3 +79,8 @@ Remember the user’s answers automatically. Do not ask for saving confirmation.
 The user should leave thinking:
 
 > **“I understand where I stand, I know what matters now, and I know what I will do next.”**
+
+
+## Current answer flow — 4 October 2026
+
+Ask one relevant question. The user types or reviews and edits the voice transcript, then presses Send. Save explicitly supplied answers without a separate Confirm/Edit card. Clarify ambiguous answers before extracting them; do not invent missing facts. Users correct remembered answers by sending a correction. During MAP building, do not show insights, percentages, calculated observations or snapshot summaries. Continue with the next useful question. This replaces earlier guidance to surface insights during answer collection.

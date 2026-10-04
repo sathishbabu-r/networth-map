@@ -9,10 +9,9 @@ import {
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../convex/_generated/api";
 import { attachVoice } from "./voice.js";
-import { financialChanges, mapConversation } from "../shared/map-conversation.mjs";
+import { mapConversation } from "../shared/map-conversation.mjs";
 import { sameAction } from "../shared/commitment.mjs";
 import { sameConfirmedContent, nextHuddleQuestion } from "./proposal.js";
-import { calculateInsights } from "../shared/financial.mjs";
 import { NetworthMap } from "./NetworthMap.jsx";
 import { NetworthWelcome } from "./original-map/networth-assessment";
 import { memoryFromAssessment } from "../shared/map-engine";
@@ -20,74 +19,13 @@ import "./style.css";
 function HuddleIcon({ className = "" }) {
   return <img className={"huddle-icon " + className} src="/money-huddle.svg" alt="" width="40" height="40" />;
 }
-const money = (n) =>
-  new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 2,
-  }).format(n);
 const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 const opening = "What’s on your mind financially?";
-function factValue(f) {
-  return f.kind === "unknown"
-    ? "I don't know"
-    : f.kind === "range"
-      ? `${money(f.lower)}–${money(f.upper)}`
-      : money(f.amount);
-}
-function Insights({ facts }) {
-  const insights = calculateInsights(
-    facts.map((f) => ({ ...f, confirmed: true })),
-  ).slice(0, 1);
-  return (
-    <div>
-      <h3>Insight</h3>
-      {insights.length ? (
-        insights.map((i) => (
-          <div key={i.key}>
-            <p>
-              {i.estimated ? "Based on your estimates: " : ""}
-              {i.key === "overdue_share"
-                ? `${Number(i.value.toFixed(2))}% of your receivables are overdue.`
-                : i.key === "emi_share"
-                  ? `Your monthly EMI is ${Number(i.value.toFixed(2))}% of your monthly income.`
-                  : i.value >= 0
-                    ? `Payments due exceed available cash by ${money(i.value)}.`
-                    : `Available cash exceeds payments due by ${money(-i.value)}.`}
-            </p>
-            <details>
-              <summary>How this was calculated</summary>
-              <p>
-                {i.formula}
-                <br />
-                {money(i.amounts[0])} {i.unit === "percent" ? "÷" : "−"}{" "}
-                {money(i.amounts[1])}
-                {i.unit === "percent" ? " × 100" : ""} ={" "}
-                {i.unit === "percent"
-                  ? `${Number(i.value.toFixed(2))}%`
-                  : money(i.value)}
-              </p>
-              <p>
-                {i.scope} · {i.asOf}
-              </p>
-            </details>
-          </div>
-        ))
-      ) : (
-        <p className="muted">
-          No calculation is supported by the confirmed figures yet. Unknowns and
-          ranges stay visible.
-        </p>
-      )}
-    </div>
-  );
-}
-function Composer({ onSend, busy, consent, setConsent, reviewPending, active = true, clearVersion = 0, children }) {
+function Composer({ onSend, busy, active = true, children }) {
   const input = useRef(), send = useRef(), voiceBox = useRef(), voice = useRef();
-  const [disclosure, setDisclosure] = useState(false);
   const ready = useAction(api.speech.ready), transcribe = useAction(api.speech.transcribe);
   useEffect(() => {
     voice.current = attachVoice(voiceBox.current, input.current, send.current, {
@@ -96,23 +34,15 @@ function Composer({ onSend, busy, consent, setConsent, reviewPending, active = t
     return () => voice.current?.dispose();
   }, [ready, transcribe]);
   useEffect(() => { if (!active) voiceBox.current?.querySelector(".microphone.listening")?.click(); }, [active]);
-  useEffect(() => { input.current.value = ""; voice.current?.clearRecording(); }, [clearVersion]);
   async function submit() {
-    if (busy || reviewPending || input.current.readOnly) return;
-    if (!consent) { setDisclosure(true); return; }
+    if (busy || input.current.readOnly) return;
     const ok = await onSend(input.current.value.trim());
     if (ok) { input.current.value = ""; voice.current.clearRecording(); }
     input.current.focus();
   }
   return <div className="composer-dock">
-    {disclosure && <div className="first-use" role="dialog" aria-label="Before your first message">
-      <h2>Before we talk</h2>
-      <p>Your answers are processed by Convex and the AI provider. Financial amounts are reviewed before saving; your goal and action are remembered. You can correct them in the chat. This app does not retain full conversations or raw audio. Provider retention has not been verified.</p>
-      <button onClick={() => { setConsent(true); setDisclosure(false); input.current.focus(); }}>I understand — continue</button>
-      <button className="text-button" onClick={() => setDisclosure(false)}>Not now</button>
-    </div>}
     <form onSubmit={e => { e.preventDefault(); void submit(); }}>
-      <fieldset disabled={busy || reviewPending} className="composer">
+      <fieldset disabled={busy} className="composer">
         <label className="sr-only" htmlFor="answer">Review your words, or type instead</label>
         <textarea ref={input} id="answer" rows="2" maxLength="5000" placeholder="Message Money Huddle…"
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void submit(); } }} />
@@ -123,13 +53,13 @@ function Composer({ onSend, busy, consent, setConsent, reviewPending, active = t
         </div>
       </fieldset>
     </form>
-    {(busy || reviewPending) && <p className="composer-hint">{busy ? "Money Huddle is thinking…" : "Confirm or edit the details above to continue."}</p>}
+    {busy && <p className="composer-hint">Money Huddle is thinking…</p>}
     {children}
   </div>;
 }
 
 function Huddle() {
-  const [agentOpen,setAgentOpen] = useState(false), [pendingReview,setPendingReview] = useState(null), [clearVersion,setClearVersion] = useState(0);
+  const [agentOpen,setAgentOpen] = useState(false);
   const saved = useQuery(api.huddles.current, {});
   const history = useQuery(api.huddles.history, { paginationOpts: { numItems: 50, cursor: null }, latestFirst: true });
   const [olderHistory, setOlderHistory] = useState([]), [olderCursor, setOlderCursor] = useState(null), [olderDone,setOlderDone] = useState(false), [loadingOlder,setLoadingOlder] = useState(false);
@@ -140,7 +70,6 @@ function Huddle() {
   const [messages, setMessages] = useState([]),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
-    [consent, setConsent] = useState(false),
     [notice, setNotice] = useState(""),
     [deleting, setDeleting] = useState(false);
   const savedRef=useRef(saved), pendingMap=useRef(null), savingMap=useRef(false);
@@ -191,12 +120,6 @@ function Huddle() {
       setMessages([...next, { role: "assistant", content: r.proposal ? nextHuddleQuestion(confirmed) : r.text }]);
       return;
     }
-    const changes = financialChanges(r.proposal, confirmed);
-    if (changes.length) {
-      setPendingReview({r,next,confirmed,changes});
-      setMessages([...next, {role:"assistant",content:"Please review these financial details before I remember them."}]);
-      return false;
-    }
     await rememberProposal(r,next,confirmed);
   }
   async function rememberProposal(r,next,confirmed) {
@@ -211,7 +134,7 @@ function Huddle() {
       setMessages([...next, { role: "assistant", content: text }]);
       return;
     }
-    const continuation = [...next, { role: "user", content: "[Memory update] The latest answer was reviewed where required and is already saved in the account and available in your remembered context. Continue with one useful next question. Do not propose this information again." }];
+    const continuation = [...next, { role: "user", content: "[Memory update] The user sent the latest answer and it is already saved in the account and available in your remembered context. Continue with one useful next question. Do not propose this information again." }];
     setMessages(next);
     try {
       const follow = await reply({ messages: continuation, today: today() });
@@ -224,15 +147,10 @@ function Huddle() {
   async function onSend(text) {
     setError("");
     setNotice("");
-    if (!consent) {
-      setError("Review the first-use disclosure before sending.");
-      return false;
-    }
     if (mapDraft || savingMap.current || pendingMap.current) {
       setError("Please finish saving the MAP before sending your message.");
       return false;
     }
-    if (pendingReview) { setError("Confirm or edit the financial details above first."); return false; }
     if (!text) {
       setError("Speak or type an answer first.");
       return false;
@@ -294,7 +212,7 @@ function Huddle() {
     return <p role="status">Loading your saved Huddle…</p>;
   return (
     <main className="conversation integrated-workspace floating-workspace">
-      <NetworthMap saved={saved} history={history ? {...history,isDone:olderDone||history.isDone} : undefined} olderHistory={olderHistory} onOlder={loadOlder} loadingOlder={loadingOlder} onChange={onMapChange} saving={mapSaving||mapDraft} locked={busy||Boolean(pendingReview)} onDraftStatus={setMapDraft} mapError={mapError} onRetry={drainMap} onDelete={()=>{setAgentOpen(true);setDeleting(true);document.querySelector(".privacy-data")?.setAttribute("open","");}} />
+      <NetworthMap saved={saved} history={history ? {...history,isDone:olderDone||history.isDone} : undefined} olderHistory={olderHistory} onOlder={loadOlder} loadingOlder={loadingOlder} onChange={onMapChange} saving={mapSaving||mapDraft} locked={busy} onDraftStatus={setMapDraft} mapError={mapError} onRetry={drainMap} onDelete={()=>{setAgentOpen(true);setDeleting(true);document.querySelector(".privacy-data")?.setAttribute("open","");}} />
       <button className="huddle-launcher" aria-label="Open Money Huddle" aria-expanded={agentOpen} aria-controls="money-huddle-panel" hidden={agentOpen} onClick={()=>setAgentOpen(true)}><HuddleIcon /><span>Money Huddle</span></button>
       <section id="money-huddle-panel" className="thread floating-huddle" hidden={!agentOpen} aria-label="Conversation with your coach" onKeyDown={event=>{if(event.key==="Escape")setAgentOpen(false);}}>
         <button className="huddle-minimise text-button" aria-label="Minimise Money Huddle" onClick={()=>setAgentOpen(false)}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M6 12h12"/></svg></button>
@@ -312,11 +230,7 @@ function Huddle() {
             </article>
           ))}
 
-          {pendingReview && <div className="financial-review" aria-label="Review financial details">
-            <p>Please confirm</p>
-            {pendingReview.changes.map((change,index)=><p key={index}><strong>{change.label}: {change.value}</strong><small>{change.detail}</small></p>)}
-            <div className="controls"><button disabled={busy} onClick={async()=>{setBusy(true);setError("");try{await rememberProposal(pendingReview.r,pendingReview.next,pendingReview.confirmed);setPendingReview(null);setClearVersion(v=>v+1);}catch(e){setError(e.message||"Could not save. Try again.");}finally{setBusy(false);}}}>Confirm</button><button className="text-button" disabled={busy} onClick={()=>{setPendingReview(null);setMessages([...pendingReview.next,{role:"assistant",content:"What should I change?"}]);}}>Edit</button></div>
-          </div>}
+
         </div>
         {error && (
           <p className="error" role="alert">
@@ -324,12 +238,10 @@ function Huddle() {
           </p>
         )}
         {notice && <p role="status">{notice}</p>}
-        {saved && notice && <div className="conversation-insight"><Insights facts={saved.content.facts} /></div>}
-        <Composer clearVersion={clearVersion} active={agentOpen} reviewPending={Boolean(pendingReview)} onSend={onSend} busy={busy||mapSaving||mapDraft} consent={consent} setConsent={setConsent}>
+        <Composer active={agentOpen} onSend={onSend} busy={busy||mapSaving||mapDraft}>
         <details className="privacy-data">
           <summary>Answers remembered between visits · <span>Privacy &amp; data</span></summary>
-          <p>Your answers are processed by Convex and the AI provider. Voice recordings are sent through Convex to OpenAI for transcription. We remember reviewed financial details and commitments from your answers, along with previous versions, in your account. You can correct them by chatting. This app does not save raw audio or the full conversation. Unsaved conversation and drafts disappear when this tab closes. Provider retention has not been verified.</p>
-          {consent && <button className="text-button" onClick={() => setConsent(false)}>Withdraw conversation consent</button>}
+          <p>Your answers are processed by Convex and the AI provider. Voice recordings are sent through Convex to OpenAI for transcription. We remember financial details and commitments from the answers you send, along with previous versions, in your account. You can correct them by chatting. This app does not save raw audio or the full conversation. Unsaved conversation and drafts disappear when this tab closes. Provider retention has not been verified.</p>
         <div className="data-controls">
           {saved && (
             <>
