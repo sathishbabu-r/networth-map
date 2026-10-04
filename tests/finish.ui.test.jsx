@@ -117,11 +117,11 @@ const fact = (key, label, amount) => ({
   note: "Current balances",
 });
 async function openMap() {
-  fireEvent.click(await screen.findByRole("button", {name:/^(Build|Continue) My MAP$/}));
+  fireEvent.click(await screen.findByRole("button", {name:"Start My Blueprint"}));
 }
 async function login() {
   fireEvent.click(
-    await screen.findByRole("button", { name: "Continue with Google" }),
+    await screen.findByRole("button", { name: "Build My Networth MAP" }),
   );
   await openMap();
   await screen.findByLabelText("Review your words, or type instead");
@@ -166,7 +166,7 @@ test("FINISH UI: automatically remembered facts → formula → goal → action 
   expect(state.saved.content.action).toEqual(s4.action);
   expect(state.saveCalls).toBe(4);
   fireEvent.click(screen.getByRole("button", { name: "Log out" }));
-  await screen.findByRole("heading", { name: "Build your Networth MAP" });
+  await screen.findByRole("heading", { name: "NETWORTH MAP" });
   await login();
   await screen.findByText(/Last time your goal was: Collect ₹3 lakh this month.*What happened/);
 });
@@ -244,7 +244,16 @@ test("a financial correction keeps the remembered action and continues the conve
   expect(screen.getByRole("heading",{name:"My Money Huddle"})).toBeTruthy();
   fireEvent.change(screen.getByLabelText("Review your words, or type instead"),{target:{value:"My next step"}});
   fireEvent.click(screen.getByRole("link",{name:"Networth MAP"}));
-  expect(screen.getByRole("button",{name:"Build My MAP"})).toBeTruthy();
+  expect(screen.getByRole("button",{name:"Start My Blueprint"})).toBeTruthy();
   await openMap();
   expect(screen.getByDisplayValue("My next step")).toBeTruthy();
+});
+
+test("public MAP home starts Google sign-in before showing Start My Blueprint", async () => {
+ render(<App />);
+ expect(screen.getByRole("heading",{name:"NETWORTH MAP"})).toBeTruthy();
+ expect(screen.queryByRole("button",{name:"Start My Blueprint"})).toBeNull();
+ fireEvent.click(await screen.findByRole("button",{name:"Build My Networth MAP"}));
+ expect(await screen.findByRole("button",{name:"Start My Blueprint"})).toBeTruthy();
+ expect(screen.queryByRole("button",{name:"Send message"})).toBeNull();
 });

@@ -424,25 +424,17 @@ export function App() {
               <h1 id="map-home-title">NETWORTH MAP</h1>
               <p className="map-home-path">Blueprint → Vision → MAP</p>
               <p className="map-home-message">Know where you stand.<br />Know where you want to go.<br />Build your MAP to get there.</p>
-              <button disabled={remembered === undefined} onClick={() => { setOpened(true); setBuilding(true); }}>{remembered ? "Continue My MAP" : "Build My MAP"}</button>
+              <button disabled={remembered === undefined} onClick={() => { setOpened(true); setBuilding(true); }}>Start My Blueprint</button>
             </section>
           </main>}
           <div hidden={!building}>{opened && <Huddle key="signed-in" />}</div>
         </>
       ) : (
-        <main>
-          <aside>
-            <p className="opening-line">Blueprint → Vision → MAP</p>
-            <h1>Know where you stand.<br/>Know where you want to go.</h1>
-            <p>Build your MAP to get there.</p>
-          </aside>
-          <section className="signin">
-            <h2>Build your Networth MAP</h2>
-            <p>
-              Sign in to keep your financial context, goal and commitment
-              private to your account.
-            </p>
-            <p>Estimates, ranges and “I don’t know” are welcome.</p>
+        <main className="map-home">
+          <section aria-labelledby="map-home-title">
+            <h1 id="map-home-title">NETWORTH MAP</h1>
+            <p className="map-home-path">Blueprint → Vision → MAP</p>
+            <p className="map-home-message">Know where you stand.<br />Know where you want to go.<br />Build your MAP to get there.</p>
             <button
               disabled={busy || !setup?.google}
               onClick={async () => {
@@ -461,7 +453,7 @@ export function App() {
                 }
               }}
             >
-              {busy ? "Opening Google…" : "Continue with Google"}
+              {busy ? "Opening Google…" : "Build My Networth MAP"}
             </button>
             {setup && !setup.google && (
               <p role="status">
@@ -478,7 +470,7 @@ export function App() {
               </p>
             )}
             <details>
-              <summary>Before you start</summary>
+              <summary>Privacy &amp; data</summary>
               <p>
                 Your answers are processed by Convex and an AI provider. Voice
                 uses OpenAI to turn recordings into text. This app saves only
@@ -491,7 +483,7 @@ export function App() {
           </section>
         </main>
       )}
-      <footer className={isAuthenticated ? "sr-only" : undefined}>
+      <footer className="sr-only">
         You choose your goal and action. Calculations use confirmed figures;
         estimates remain visible.
       </footer>
