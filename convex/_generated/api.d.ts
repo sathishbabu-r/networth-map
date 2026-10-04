@@ -12,6 +12,8 @@ import type * as auth from "../auth.js";
 import type * as coach from "../coach.js";
 import type * as http from "../http.js";
 import type * as huddles from "../huddles.js";
+import type * as mapValidator from "../mapValidator.js";
+import type * as productInsights from "../productInsights.js";
 import type * as providerProbe from "../providerProbe.js";
 import type * as speech from "../speech.js";
 import type * as validators from "../validators.js";
@@ -27,6 +29,8 @@ declare const fullApi: ApiFromModules<{
   coach: typeof coach;
   http: typeof http;
   huddles: typeof huddles;
+  mapValidator: typeof mapValidator;
+  productInsights: typeof productInsights;
   providerProbe: typeof providerProbe;
   speech: typeof speech;
   validators: typeof validators;

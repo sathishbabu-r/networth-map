@@ -4,6 +4,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { query, mutation, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { content } from "./validators";
+import { validateMap } from "../shared/map-engine";
 import { validateContent } from "../shared/huddle.mjs";
 export const current = query({
   args: {},
@@ -52,6 +53,7 @@ export const save = mutation({
     const c = args.content;
     try {
       validateContent(c);
+      if (c.map) validateMap(c.map);
     } catch (error) {
       throw new ConvexError(
         error instanceof Error
@@ -88,7 +90,7 @@ export const save = mutation({
   },
 });
 export const history = query({
-  args: { paginationOpts: paginationOptsValidator },
+  args: { paginationOpts: paginationOptsValidator, latestFirst: v.optional(v.boolean()) },
   returns: v.object({
     page: v.array(
       v.object({
@@ -124,6 +126,7 @@ export const history = query({
     return await ctx.db
       .query("huddleChanges")
       .withIndex("by_huddle", (q) => q.eq("huddleId", saved._id))
+      .order(args.latestFirst ? "desc" : "asc")
       .paginate(args.paginationOpts);
   },
 });
@@ -137,6 +140,7 @@ export const remove = mutation({
       .query("huddles")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .unique();
+    for (const table of ["productInsightEvents", "productFeedback", "completedMapEmailSignups"] as const) await ctx.scheduler.runAfter(0,internal.productInsights.deleteAccountRows,{userId,table});
     if (saved) {
       await ctx.db.delete(saved._id);
       await ctx.scheduler.runAfter(0, internal.huddles.cleanHistory, {

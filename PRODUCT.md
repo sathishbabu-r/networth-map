@@ -1,5 +1,7 @@
 # PRODUCT · My Money Huddle
 
+> **Approved expansion — 3 October 2026:** The integrated Networth MAP, conversational completion and daily progress scope is recorded in [MAP_HUDDLE_SCOPE.md](docs/MAP_HUDDLE_SCOPE.md). It replaces the earlier exclusions for the full MAP and daily check-ins.
+
 > **Interaction update — 3 October 2026:** The builder chose automatic memory between visits. Financial answers, the chosen goal, dated action and reported outcomes are saved without confirmation cards. Users correct remembered information through conversation. This replaces the confirmation-card requirement described below. Privacy disclosure, processing consent, export/deletion, authentication and formula-based calculations remain in place. The application still does not retain full chat history or raw audio.
 
 ## 1. THE JOB

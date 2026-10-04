@@ -1,5 +1,7 @@
 # IDEA LOCK · Build Sprint
 
+> **Approved expansion — 3 October 2026:** The integrated Networth MAP, conversational completion and daily progress scope is recorded in [MAP_HUDDLE_SCOPE.md](docs/MAP_HUDDLE_SCOPE.md). It replaces the earlier exclusions for the full MAP and daily check-ins.
+
 ## THE IDEA
 
 **The idea, in one line:**  

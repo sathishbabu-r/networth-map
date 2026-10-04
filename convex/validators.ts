@@ -1,3 +1,4 @@
+import { mapMemory } from "./mapValidator";
 import { v } from "convex/values";
 export const fact = v.object({
   key: v.string(),
@@ -49,6 +50,7 @@ export const outcome = v.object({
   occurredOn: v.string(),
 });
 export const content = v.object({
+  map: v.optional(v.union(mapMemory, v.null())),
   concern: v.string(),
   facts: v.array(fact),
   goal: v.union(goal, v.null()),

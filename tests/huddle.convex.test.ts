@@ -1,3 +1,4 @@
+import { emptyMap } from "../shared/map-engine";
 import { test, expect } from "vitest";
 import { convexTest } from "convex-test";
 import schema from "../convex/schema";
@@ -161,4 +162,11 @@ test("return update remembers commitment and keeps collection separate from the 
   expect(saved?.content.action).toEqual(content.action);
   expect(saved?.content.facts[0].amount).toBe(800000);
   expect(saved?.content.outcome?.amount).toBe(200000);
+});
+
+test("MAP memory survives return visits and is isolated from another account",async()=>{
+ const {t,a,b,aId}=await setup();const map=emptyMap();map.data.monthlyNeeds="90000";map.data.monthlyWants="30000";map.covered=["spend"];
+ await a.mutation(api.huddles.save,{content:{...initial(),map},expectedRevision:0});
+ const returning=t.withIdentity({subject:aId+"|return"});expect((await returning.query(api.huddles.current,{}))?.content.map?.data.monthlyNeeds).toBe("90000");expect(await b.query(api.huddles.current,{})).toBeNull();
+ const history=await returning.query(api.huddles.history,{paginationOpts:{numItems:10,cursor:null},latestFirst:true});expect(history.page[0].newContent.map?.covered).toEqual(["spend"]);
 });

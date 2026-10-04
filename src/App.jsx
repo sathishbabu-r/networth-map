@@ -9,8 +9,11 @@ import {
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../convex/_generated/api";
 import { attachVoice } from "./voice.js";
+import { sameAction } from "../shared/commitment.mjs";
 import { sameConfirmedContent, nextHuddleQuestion } from "./proposal.js";
 import { calculateInsights } from "../shared/financial.mjs";
+import { NetworthMap } from "./NetworthMap.jsx";
+import { memoryFromAssessment } from "../shared/map-engine";
 import "./style.css";
 function HuddleIcon({ className = "" }) {
   return <img className={"huddle-icon " + className} src="/money-huddle.svg" alt="" width="40" height="40" />;
@@ -123,6 +126,8 @@ function Composer({ onSend, busy, consent, setConsent, reviewPending, children }
 
 function Huddle() {
   const saved = useQuery(api.huddles.current, {});
+  const history = useQuery(api.huddles.history, { paginationOpts: { numItems: 50, cursor: null }, latestFirst: true });
+  const [olderHistory, setOlderHistory] = useState([]), [olderCursor, setOlderCursor] = useState(null), [olderDone,setOlderDone] = useState(false), [loadingOlder,setLoadingOlder] = useState(false);
   const reply = useAction(api.coach.reply),
     save = useMutation(api.huddles.save),
     remove = useMutation(api.huddles.remove);
@@ -133,6 +138,27 @@ function Huddle() {
     [consent, setConsent] = useState(false),
     [notice, setNotice] = useState(""),
     [deleting, setDeleting] = useState(false);
+  const savedRef=useRef(saved), pendingMap=useRef(null), savingMap=useRef(false);
+  const [mapSaving,setMapSaving]=useState(false), [mapError,setMapError]=useState(""), [mapDraft,setMapDraft]=useState(false);
+  if (saved !== undefined && (!savedRef.current || !saved || saved.revision >= savedRef.current.revision)) savedRef.current=saved;
+  async function drainMap() {
+    if (savingMap.current || busy || !pendingMap.current) return;
+    savingMap.current=true; setMapSaving(true); setMapError("");
+    try {
+      while(pendingMap.current) {
+        const pending=pendingMap.current; pendingMap.current=null;
+        const current=savedRef.current;
+        const content={...(current?.content??{concern:"Building my Networth MAP",facts:[],goal:null,action:null,outcome:null}),map:memoryFromAssessment(pending.data,current?.content.map,pending.step)};
+        try {
+          const revision=await save({content,expectedRevision:current?.revision??0});
+          savedRef.current={...current,content,revision};
+        } catch(e) {pendingMap.current=pending;throw e;}
+      }
+    } catch(e) {setMapError(e.message||"Your MAP could not be remembered. Your edits are still here.");}
+    finally {savingMap.current=false;setMapSaving(false);}
+  }
+  function onMapChange(data,step) {pendingMap.current={data,step};void drainMap();}
+  useEffect(()=>{if(!busy && pendingMap.current) void drainMap();},[busy]);
   const started = useRef(false);
   const log = useRef();
   useEffect(() => {
@@ -144,7 +170,7 @@ function Huddle() {
           content: saved?.content.action
             ? `Last time your goal was: ${saved.content.goal.text}. You committed to ${saved.content.action.text} by ${saved.content.action.dueDate}. What happened?`
             : saved
-              ? `Welcome back. I remember what we discussed${saved.content.goal ? ` and goal: ${saved.content.goal.text}` : ""}. ${saved.content.goal ? "What's one realistic action you can take this week?" : "What would you like to achieve from here?"}`
+              ? `Welcome back. I remember what we discussed${saved.content.goal ? ` and your goal: ${saved.content.goal.text}` : ""}. ${saved.content.goal ? "What's one realistic action you can take this week?" : "What would you like to achieve from here?"}`
               : opening,
         },
       ]);
@@ -160,17 +186,18 @@ function Huddle() {
       setMessages([...next, { role: "assistant", content: r.proposal ? nextHuddleQuestion(confirmed) : r.text }]);
       return;
     }
-    await save({ content: r.proposal, expectedRevision: r.revision });
+    const revision=await save({ content: r.proposal, expectedRevision: r.revision });
+    savedRef.current={...savedRef.current,content:r.proposal,revision};
     const remembered = r.proposal;
     setNotice("Answers remembered. You can correct them in the conversation.");
-    if (remembered.action || remembered.outcome) {
+    if ((remembered.outcome && !sameConfirmedContent({facts:[],outcome:remembered.outcome},{facts:[],outcome:confirmed?.outcome})) || (remembered.action && !sameAction(remembered.action,confirmed?.action))) {
       const text = remembered.outcome
         ? `Your update is remembered: ${remembered.outcome.text}. Action completion and financial results are recorded separately.`
         : `Your goal: ${remembered.goal.text}. This week: ${remembered.action.text}, by ${remembered.action.dueDate}.`;
       setMessages([...next, { role: "assistant", content: text }]);
       return;
     }
-    const continuation = [...next, { role: "user", content: "[Memory update] Automatic memory is enabled. The latest answer has been saved in the account: " + JSON.stringify(remembered) + ". Continue with one useful next question. Do not propose this information again." }];
+    const continuation = [...next, { role: "user", content: "[Memory update] Automatic memory is enabled. The latest answer is already saved in the account and available in your remembered context. Continue with one useful next question. Do not propose this information again." }];
     setMessages(next);
     try {
       const follow = await reply({ messages: continuation, today: today() });
@@ -185,6 +212,10 @@ function Huddle() {
     setNotice("");
     if (!consent) {
       setError("Review the first-use disclosure before sending.");
+      return false;
+    }
+    if (mapDraft || savingMap.current || pendingMap.current) {
+      setError("Please finish saving the MAP before sending your message.");
       return false;
     }
     if (!text) {
@@ -217,8 +248,13 @@ function Huddle() {
         done = result.isDone;
         cursor = result.continueCursor;
       }
+      const mapExtras={};
+      for(const table of ["productInsightEvents","productFeedback","completedMapEmailSignups"]) {
+        let cursor=null, done=false;mapExtras[table]=[];
+        while(!done){const page=await client.query(api.productInsights.exportRows,{table,paginationOpts:{numItems:50,cursor}});mapExtras[table].push(...page.page);cursor=page.continueCursor;done=page.isDone;}
+      }
       const blob = new Blob(
-        [JSON.stringify({ confirmed: saved, changes: history }, null, 2)],
+        [JSON.stringify({ confirmed: saved, changes: history, mapExtras }, null, 2)],
         { type: "application/json" },
       );
       const url = URL.createObjectURL(blob),
@@ -233,12 +269,21 @@ function Huddle() {
       setBusy(false);
     }
   }
+  async function loadOlder() {
+    setLoadingOlder(true);
+    try {
+      const result = await client.query(api.huddles.history, { paginationOpts: {numItems:50,cursor:olderCursor??history.continueCursor}, latestFirst:true });
+      setOlderHistory(rows=>[...rows,...result.page]); setOlderCursor(result.continueCursor); setOlderDone(result.isDone);
+    } catch { setError("Could not load earlier progress. Try again."); } finally { setLoadingOlder(false); }
+  }
   if (saved === undefined)
     return <p role="status">Loading your saved Huddle…</p>;
   return (
-    <main className="conversation">
+    <main className="conversation integrated-workspace">
+      <NetworthMap saved={saved} history={history ? {...history,isDone:olderDone||history.isDone} : undefined} olderHistory={olderHistory} onOlder={loadOlder} loadingOlder={loadingOlder} onChange={onMapChange} saving={mapSaving||mapDraft} locked={busy} onDraftStatus={setMapDraft} mapError={mapError} onRetry={drainMap} onDelete={()=>{setDeleting(true);document.querySelector(".privacy-data")?.setAttribute("open","");}} />
       <section className="thread" aria-label="Conversation with your coach">
         <div className="thread-identity"><HuddleIcon /><h1 className="thread-title">My Money Huddle</h1></div>
+        <p className="thread-intro">Let’s build your MAP together.</p>
         <div id="messages" ref={log} role="log" aria-live="polite">
           {messages.filter(m => !m.content.startsWith("[Memory update]")).map((m, i) => (
             <article key={i} className={"message " + m.role}>
@@ -259,7 +304,7 @@ function Huddle() {
         )}
         {notice && <p role="status">{notice}</p>}
         {saved && notice && <div className="conversation-insight"><Insights facts={saved.content.facts} /></div>}
-        <Composer onSend={onSend} busy={busy} consent={consent} setConsent={setConsent}>
+        <Composer onSend={onSend} busy={busy||mapSaving||mapDraft} consent={consent} setConsent={setConsent}>
         <details className="privacy-data">
           <summary>Answers remembered between visits · <span>Privacy &amp; data</span></summary>
           <p>Your answers are processed by Convex and the AI provider. Voice recordings are sent through Convex to OpenAI for transcription. We automatically remember financial context and commitments from your answers, along with previous versions, in your account. You can correct them by chatting. This app does not save raw audio or the full conversation. Unsaved conversation and drafts disappear when this tab closes. Provider retention has not been verified.</p>
@@ -286,7 +331,7 @@ function Huddle() {
           {deleting && (
             <div role="alert">
               <p>
-                Delete your saved snapshot, goal, action and confirmed history?
+                Delete your MAP, saved snapshot, goal, action and remembered history?
                 This cannot be undone.
               </p>
               <button className="secondary" onClick={() => setDeleting(false)}>
@@ -297,7 +342,9 @@ function Huddle() {
                   setBusy(true);
                   try {
                     await remove({});
+                    pendingMap.current=null;savedRef.current=null;
                     setDeleting(false);
+                    setOlderHistory([]); setOlderCursor(null); setOlderDone(false);
                     setMessages([{ role: "assistant", content: opening }]);
                     setNotice("Your saved Huddle was deleted.");
                   } catch {
@@ -322,6 +369,10 @@ export function App() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { signIn, signOut } = useAuthActions();
   const status = useAction(api.coach.status);
+  const remembered = useQuery(api.huddles.current, isAuthenticated ? {} : "skip");
+  const [building, setBuilding] = useState(false);
+  const [opened, setOpened] = useState(false);
+  useEffect(() => { if (!isAuthenticated) { setBuilding(false); setOpened(false); } }, [isAuthenticated]);
   const [setup, setSetup] = useState(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -333,8 +384,8 @@ export function App() {
   return (
     <>
       <header>
-        <a className="brand" href="/">
-          <HuddleIcon />My Money Huddle
+        <a className="brand" href="/" onClick={isAuthenticated ? (event) => { event.preventDefault(); setBuilding(false); } : undefined}>
+          <span className="map-brand-mark" aria-hidden="true">NM</span>Networth MAP
         </a>
         {isAuthenticated ? (
           <button
@@ -367,16 +418,26 @@ export function App() {
           <p role="status">Checking your sign-in…</p>
         </main>
       ) : isAuthenticated ? (
-        <Huddle key="signed-in" />
+        <>
+          {!building && <main className="map-home">
+            <section aria-labelledby="map-home-title">
+              <h1 id="map-home-title">NETWORTH MAP</h1>
+              <p className="map-home-path">Blueprint → Vision → MAP</p>
+              <p className="map-home-message">Know where you stand.<br />Know where you want to go.<br />Build your MAP to get there.</p>
+              <button disabled={remembered === undefined} onClick={() => { setOpened(true); setBuilding(true); }}>{remembered ? "Continue My MAP" : "Build My MAP"}</button>
+            </section>
+          </main>}
+          <div hidden={!building}>{opened && <Huddle key="signed-in" />}</div>
+        </>
       ) : (
         <main>
           <aside>
-            <p className="opening-line">A guided 10-minute financial clarity conversation with My Money Huddle</p>
-            <h1>Your wealth.<br/>Your vision.<br/>Your next move.</h1>
-            <p>Know your wealth. Define your vision. Make your next move with clarity.</p>
+            <p className="opening-line">Blueprint → Vision → MAP</p>
+            <h1>Know where you stand.<br/>Know where you want to go.</h1>
+            <p>Build your MAP to get there.</p>
           </aside>
           <section className="signin">
-            <h2>Start your Money Huddle</h2>
+            <h2>Build your Networth MAP</h2>
             <p>
               Sign in to keep your financial context, goal and commitment
               private to your account.
