@@ -422,8 +422,18 @@ export function App() {
         <>
           {!building && <div className="original-map map-entry">
             <main className="shell">
-              <NetworthWelcome
-                buttonLabel={busy ? "Opening Google…" : isAuthenticated ? "Start My Blueprint" : "Build My Networth MAP"}
+              {isAuthenticated ? <section className="blueprint-entry" aria-labelledby="blueprint-entry-title">
+                <h1 id="blueprint-entry-title">Your best estimates are enough.</h1>
+                <p className="quick-start-intro">Keep these three numbers roughly ready. You can refine them as you go.</p>
+                <ol className="quick-start-list">
+                  <li><b>01</b><span>Annual income and estimated tax rate</span></li>
+                  <li><b>02</b><span>Current asset and loan balances</span></li>
+                  <li><b>03</b><span>Average monthly household and lifestyle costs</span></li>
+                </ol>
+                <p className="quick-start-reassurance">About 20 minutes · Remembered privately in your account</p>
+                <button className="primary" disabled={remembered === undefined} onClick={() => { setOpened(true); setBuilding(true); }}>Start My Blueprint <span aria-hidden="true">→</span></button>
+              </section> : <NetworthWelcome
+                buttonLabel={busy ? "Opening Google…" : "Build My Networth MAP"}
                 disabled={busy || (isAuthenticated ? remembered === undefined : !setup?.google)}
                 onBuild={async () => {
                   if (isAuthenticated) { setOpened(true); setBuilding(true); return; }
@@ -432,7 +442,7 @@ export function App() {
                   catch { setError("Google sign-in could not start. Check the connection and retry."); }
                   finally { setBusy(false); }
                 }}
-              />
+              />}
             </main>
             {!isAuthenticated && <details className="entry-privacy">
               <summary>Privacy &amp; data</summary>

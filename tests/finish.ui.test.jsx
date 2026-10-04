@@ -240,7 +240,7 @@ test("a financial correction keeps the remembered action and continues the conve
 
  test("Networth MAP home leads into Huddle and home navigation preserves the draft", async () => {
   state.signedIn=true; render(<App />);
-  expect(await screen.findByRole("heading",{name:/Your wealth/})).toBeTruthy();
+  expect(await screen.findByRole("heading",{name:"Your best estimates are enough."})).toBeTruthy();
   expect(screen.queryByRole("button",{name:"Send message"})).toBeNull();
   await openMap();
   expect(screen.getByRole("heading",{name:"My Money Huddle"})).toBeTruthy();
@@ -259,5 +259,7 @@ test("public MAP home starts Google sign-in before showing Start My Blueprint", 
  expect(screen.queryByRole("button",{name:"Start My Blueprint"})).toBeNull();
  fireEvent.click(await screen.findByRole("button",{name:"Build My Networth MAP"}));
  expect(await screen.findByRole("button",{name:"Start My Blueprint"})).toBeTruthy();
+ expect(screen.queryByRole("heading",{name:/Your wealth/})).toBeNull();
+ expect(screen.getByRole("heading",{name:"Your best estimates are enough."})).toBeTruthy();
  expect(screen.queryByRole("button",{name:"Send message"})).toBeNull();
 });
