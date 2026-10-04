@@ -9,6 +9,7 @@ import {
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../convex/_generated/api";
 import { attachVoice } from "./voice.js";
+import { financialChanges, mapConversation } from "../shared/map-conversation.mjs";
 import { sameAction } from "../shared/commitment.mjs";
 import { sameConfirmedContent, nextHuddleQuestion } from "./proposal.js";
 import { calculateInsights } from "../shared/financial.mjs";
@@ -84,7 +85,7 @@ function Insights({ facts }) {
     </div>
   );
 }
-function Composer({ onSend, busy, consent, setConsent, reviewPending, children }) {
+function Composer({ onSend, busy, consent, setConsent, reviewPending, active = true, clearVersion = 0, children }) {
   const input = useRef(), send = useRef(), voiceBox = useRef(), voice = useRef();
   const [disclosure, setDisclosure] = useState(false);
   const ready = useAction(api.speech.ready), transcribe = useAction(api.speech.transcribe);
@@ -94,6 +95,8 @@ function Composer({ onSend, busy, consent, setConsent, reviewPending, children }
     });
     return () => voice.current?.dispose();
   }, [ready, transcribe]);
+  useEffect(() => { if (!active) voiceBox.current?.querySelector(".microphone.listening")?.click(); }, [active]);
+  useEffect(() => { input.current.value = ""; voice.current?.clearRecording(); }, [clearVersion]);
   async function submit() {
     if (busy || reviewPending || input.current.readOnly) return;
     if (!consent) { setDisclosure(true); return; }
@@ -104,14 +107,14 @@ function Composer({ onSend, busy, consent, setConsent, reviewPending, children }
   return <div className="composer-dock">
     {disclosure && <div className="first-use" role="dialog" aria-label="Before your first message">
       <h2>Before we talk</h2>
-      <p>Your answers are processed by Convex and the AI provider. Financial details, your goal and action are remembered automatically. You can correct them in the chat. This app does not retain full conversations or raw audio. Provider retention has not been verified.</p>
+      <p>Your answers are processed by Convex and the AI provider. Financial amounts are reviewed before saving; your goal and action are remembered. You can correct them in the chat. This app does not retain full conversations or raw audio. Provider retention has not been verified.</p>
       <button onClick={() => { setConsent(true); setDisclosure(false); input.current.focus(); }}>I understand — continue</button>
       <button className="text-button" onClick={() => setDisclosure(false)}>Not now</button>
     </div>}
     <form onSubmit={e => { e.preventDefault(); void submit(); }}>
       <fieldset disabled={busy || reviewPending} className="composer">
         <label className="sr-only" htmlFor="answer">Review your words, or type instead</label>
-        <textarea ref={input} id="answer" rows="2" maxLength="5000" placeholder="Message My Money Huddle…"
+        <textarea ref={input} id="answer" rows="2" maxLength="5000" placeholder="Message Money Huddle…"
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void submit(); } }} />
         <div className="composer-actions"><div ref={voiceBox} className="voice-inline" />
           <button type="submit" ref={send} className="send-icon" aria-label={busy ? "Your coach is thinking" : "Send message"}>
@@ -126,6 +129,7 @@ function Composer({ onSend, busy, consent, setConsent, reviewPending, children }
 }
 
 function Huddle() {
+  const [agentOpen,setAgentOpen] = useState(false), [pendingReview,setPendingReview] = useState(null), [clearVersion,setClearVersion] = useState(0);
   const saved = useQuery(api.huddles.current, {});
   const history = useQuery(api.huddles.history, { paginationOpts: { numItems: 50, cursor: null }, latestFirst: true });
   const [olderHistory, setOlderHistory] = useState([]), [olderCursor, setOlderCursor] = useState(null), [olderDone,setOlderDone] = useState(false), [loadingOlder,setLoadingOlder] = useState(false);
@@ -171,8 +175,8 @@ function Huddle() {
           content: saved?.content.action
             ? `Last time your goal was: ${saved.content.goal.text}. You committed to ${saved.content.action.text} by ${saved.content.action.dueDate}. What happened?`
             : saved
-              ? `Welcome back. I remember what we discussed${saved.content.goal ? ` and your goal: ${saved.content.goal.text}` : ""}. ${saved.content.goal ? "What's one realistic action you can take this week?" : "What would you like to achieve from here?"}`
-              : opening,
+              ? `Welcome back. I remember what we discussed${saved.content.goal ? ` and your goal: ${saved.content.goal.text}` : ""}. ${saved.content.goal ? "What's one realistic action you can take this week?" : (mapConversation(saved.content.map).missing[0]?.question ?? "What would you like to achieve from here?")}`
+              : `Let’s build your MAP together. ${mapConversation(null).missing[0].question}`,
         },
       ]);
     }
@@ -187,6 +191,15 @@ function Huddle() {
       setMessages([...next, { role: "assistant", content: r.proposal ? nextHuddleQuestion(confirmed) : r.text }]);
       return;
     }
+    const changes = financialChanges(r.proposal, confirmed);
+    if (changes.length) {
+      setPendingReview({r,next,confirmed,changes});
+      setMessages([...next, {role:"assistant",content:"Please review these financial details before I remember them."}]);
+      return false;
+    }
+    await rememberProposal(r,next,confirmed);
+  }
+  async function rememberProposal(r,next,confirmed) {
     const revision=await save({ content: r.proposal, expectedRevision: r.revision });
     savedRef.current={...savedRef.current,content:r.proposal,revision};
     const remembered = r.proposal;
@@ -198,7 +211,7 @@ function Huddle() {
       setMessages([...next, { role: "assistant", content: text }]);
       return;
     }
-    const continuation = [...next, { role: "user", content: "[Memory update] Automatic memory is enabled. The latest answer is already saved in the account and available in your remembered context. Continue with one useful next question. Do not propose this information again." }];
+    const continuation = [...next, { role: "user", content: "[Memory update] The latest answer was reviewed where required and is already saved in the account and available in your remembered context. Continue with one useful next question. Do not propose this information again." }];
     setMessages(next);
     try {
       const follow = await reply({ messages: continuation, today: today() });
@@ -219,14 +232,14 @@ function Huddle() {
       setError("Please finish saving the MAP before sending your message.");
       return false;
     }
+    if (pendingReview) { setError("Confirm or edit the financial details above first."); return false; }
     if (!text) {
       setError("Speak or type an answer first.");
       return false;
     }
     setBusy(true);
     try {
-      await ask([...messages, { role: "user", content: text }]);
-      return true;
+      return (await ask([...messages, { role: "user", content: text }])) !== false;
     } catch (e) {
       setError(e.message || "Could not connect. Your answer is still here.");
       return false;
@@ -280,11 +293,13 @@ function Huddle() {
   if (saved === undefined)
     return <p role="status">Loading your saved Huddle…</p>;
   return (
-    <main className="conversation integrated-workspace">
-      <NetworthMap saved={saved} history={history ? {...history,isDone:olderDone||history.isDone} : undefined} olderHistory={olderHistory} onOlder={loadOlder} loadingOlder={loadingOlder} onChange={onMapChange} saving={mapSaving||mapDraft} locked={busy} onDraftStatus={setMapDraft} mapError={mapError} onRetry={drainMap} onDelete={()=>{setDeleting(true);document.querySelector(".privacy-data")?.setAttribute("open","");}} />
-      <section className="thread" aria-label="Conversation with your coach">
-        <div className="thread-identity"><HuddleIcon /><h1 className="thread-title">My Money Huddle</h1></div>
-        <p className="thread-intro">Let’s build your MAP together.</p>
+    <main className="conversation integrated-workspace floating-workspace">
+      <NetworthMap saved={saved} history={history ? {...history,isDone:olderDone||history.isDone} : undefined} olderHistory={olderHistory} onOlder={loadOlder} loadingOlder={loadingOlder} onChange={onMapChange} saving={mapSaving||mapDraft} locked={busy||Boolean(pendingReview)} onDraftStatus={setMapDraft} mapError={mapError} onRetry={drainMap} onDelete={()=>{setAgentOpen(true);setDeleting(true);document.querySelector(".privacy-data")?.setAttribute("open","");}} />
+      <button className="huddle-launcher" aria-label="Open Money Huddle" aria-expanded={agentOpen} aria-controls="money-huddle-panel" hidden={agentOpen} onClick={()=>setAgentOpen(true)}><HuddleIcon /><span>Money Huddle</span></button>
+      <section id="money-huddle-panel" className="thread floating-huddle" hidden={!agentOpen} aria-label="Conversation with your coach" onKeyDown={event=>{if(event.key==="Escape")setAgentOpen(false);}}>
+        <button className="huddle-minimise text-button" aria-label="Minimise Money Huddle" onClick={()=>setAgentOpen(false)}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+        <div className="thread-identity"><HuddleIcon /><h1 className="thread-title">Money Huddle</h1></div>
+        <p className="thread-intro">Your Vision. Your Wealth. Your Next Move.</p>
         <div id="messages" ref={log} role="log" aria-live="polite">
           {messages.filter(m => !m.content.startsWith("[Memory update]")).map((m, i) => (
             <article key={i} className={"message " + m.role}>
@@ -297,6 +312,11 @@ function Huddle() {
             </article>
           ))}
 
+          {pendingReview && <div className="financial-review" aria-label="Review financial details">
+            <p>Please confirm</p>
+            {pendingReview.changes.map((change,index)=><p key={index}><strong>{change.label}: {change.value}</strong><small>{change.detail}</small></p>)}
+            <div className="controls"><button disabled={busy} onClick={async()=>{setBusy(true);setError("");try{await rememberProposal(pendingReview.r,pendingReview.next,pendingReview.confirmed);setPendingReview(null);setClearVersion(v=>v+1);}catch(e){setError(e.message||"Could not save. Try again.");}finally{setBusy(false);}}}>Confirm</button><button className="text-button" disabled={busy} onClick={()=>{setPendingReview(null);setMessages([...pendingReview.next,{role:"assistant",content:"What should I change?"}]);}}>Edit</button></div>
+          </div>}
         </div>
         {error && (
           <p className="error" role="alert">
@@ -305,10 +325,10 @@ function Huddle() {
         )}
         {notice && <p role="status">{notice}</p>}
         {saved && notice && <div className="conversation-insight"><Insights facts={saved.content.facts} /></div>}
-        <Composer onSend={onSend} busy={busy||mapSaving||mapDraft} consent={consent} setConsent={setConsent}>
+        <Composer clearVersion={clearVersion} active={agentOpen} reviewPending={Boolean(pendingReview)} onSend={onSend} busy={busy||mapSaving||mapDraft} consent={consent} setConsent={setConsent}>
         <details className="privacy-data">
           <summary>Answers remembered between visits · <span>Privacy &amp; data</span></summary>
-          <p>Your answers are processed by Convex and the AI provider. Voice recordings are sent through Convex to OpenAI for transcription. We automatically remember financial context and commitments from your answers, along with previous versions, in your account. You can correct them by chatting. This app does not save raw audio or the full conversation. Unsaved conversation and drafts disappear when this tab closes. Provider retention has not been verified.</p>
+          <p>Your answers are processed by Convex and the AI provider. Voice recordings are sent through Convex to OpenAI for transcription. We remember reviewed financial details and commitments from your answers, along with previous versions, in your account. You can correct them by chatting. This app does not save raw audio or the full conversation. Unsaved conversation and drafts disappear when this tab closes. Provider retention has not been verified.</p>
           {consent && <button className="text-button" onClick={() => setConsent(false)}>Withdraw conversation consent</button>}
         <div className="data-controls">
           {saved && (
