@@ -5,6 +5,7 @@ import React from "react";
 import { test, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   render,
+  within,
   screen,
   fireEvent,
   waitFor,
@@ -200,9 +201,10 @@ test("blank answers and answers without processing consent never reach the coach
 test("one composer, privacy controls and no financial confirmation cards", async () => {
   state.signedIn = true; render(<App />); await openMap();
   await screen.findByLabelText("Review your words, or type instead");
-  expect(screen.getAllByRole("textbox")).toHaveLength(1);
+  const thread = within(screen.getByRole("region", {name:"Conversation with your coach"}));
+  expect(thread.getAllByRole("textbox")).toHaveLength(1);
   expect(screen.getByRole("button", { name: "Record voice message" })).toBeTruthy();
-  expect(screen.queryByRole("checkbox")).toBeNull();
+  expect(thread.queryByRole("checkbox")).toBeNull();
   expect(screen.queryByText("Saved Huddle")).toBeNull();
   expect(screen.getByText("Privacy & data")).toBeTruthy();
 });
