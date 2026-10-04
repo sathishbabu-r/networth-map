@@ -307,3 +307,19 @@ test("MAP financial facts are not saved before Confirm; Edit discards the propos
  expect(start.getAttribute("aria-describedby")).toBe(message.id);
  } finally { actions["coach:status"] = original; }
  });
+
+test("a browser that stays on the start page gets a direct Google continuation link", async () => {
+ const original = authActions.signIn;
+ const redirect = new URL("https://example.convex.site/api/auth/signin/google?code=test");
+ authActions.signIn = async () => ({signingIn:false,redirect});
+ try {
+ render(<App />);
+ const start = screen.getByRole("button",{name:"Build My Networth MAP"});
+ await waitFor(() => expect(start.disabled).toBe(false));
+ fireEvent.click(start);
+ const link = await screen.findByRole("link",{name:"Continue to Google"});
+ expect(link.getAttribute("href")).toBe(redirect.toString());
+ expect(link.getAttribute("target")).toBeNull();
+ expect(link.parentElement.previousElementSibling).toBe(start);
+ } finally {authActions.signIn = original;}
+});

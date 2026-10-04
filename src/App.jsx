@@ -394,6 +394,7 @@ export function App() {
   const [building, setBuilding] = useState(false);
   const [opened, setOpened] = useState(false);
   useEffect(() => { if (!isAuthenticated) { setBuilding(false); setOpened(false); } else { setOpened(true); setBuilding(true); } }, [isAuthenticated]);
+  const [authRedirect, setAuthRedirect] = useState("");
   const [setup, setSetup] = useState(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -444,12 +445,17 @@ export function App() {
             <main className="shell">
               <NetworthWelcome
                 buttonLabel={busy ? "Opening Google…" : isAuthenticated ? "Continue My MAP" : "Build My Networth MAP"}
+                authRedirect={!isAuthenticated ? authRedirect : ""}
                 authMessage={!isAuthenticated ? error || (setup && !setup.google ? "Google sign-in is temporarily unavailable. Please try again shortly." : "") : ""}
                 disabled={busy || (isAuthenticated ? remembered === undefined : !setup?.google)}
                 onBuild={async () => {
                   if (isAuthenticated) { setOpened(true); setBuilding(true); return; }
-                  setBusy(true); setError("");
-                  try { await signIn("google", {redirectTo: window.location.origin}); }
+                  setBusy(true); setError(""); setAuthRedirect("");
+                  try {
+                    const result = await signIn("google", {redirectTo: window.location.origin});
+                    if (result?.redirect) setAuthRedirect(result.redirect.toString());
+                    else if (result?.signingIn === false) setError("Google sign-in could not start. Please try again.");
+                  }
                   catch { setError("Google sign-in could not start. Check the connection and retry."); }
                   finally { setBusy(false); }
                 }}
