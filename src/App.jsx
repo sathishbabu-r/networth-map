@@ -13,6 +13,7 @@ import { sameAction } from "../shared/commitment.mjs";
 import { sameConfirmedContent, nextHuddleQuestion } from "./proposal.js";
 import { calculateInsights } from "../shared/financial.mjs";
 import { NetworthMap } from "./NetworthMap.jsx";
+import { NetworthWelcome } from "./original-map/networth-assessment";
 import { memoryFromAssessment } from "../shared/map-engine";
 import "./style.css";
 function HuddleIcon({ className = "" }) {
@@ -417,71 +418,31 @@ export function App() {
         <main>
           <p role="status">Checking your sign-in…</p>
         </main>
-      ) : isAuthenticated ? (
-        <>
-          {!building && <main className="map-home">
-            <section aria-labelledby="map-home-title">
-              <h1 id="map-home-title">NETWORTH MAP</h1>
-              <p className="map-home-path">Blueprint → Vision → MAP</p>
-              <p className="map-home-message">Know where you stand.<br />Know where you want to go.<br />Build your MAP to get there.</p>
-              <button disabled={remembered === undefined} onClick={() => { setOpened(true); setBuilding(true); }}>Start My Blueprint</button>
-            </section>
-          </main>}
-          <div hidden={!building}>{opened && <Huddle key="signed-in" />}</div>
-        </>
       ) : (
-        <main className="map-home">
-          <section aria-labelledby="map-home-title">
-            <h1 id="map-home-title">NETWORTH MAP</h1>
-            <p className="map-home-path">Blueprint → Vision → MAP</p>
-            <p className="map-home-message">Know where you stand.<br />Know where you want to go.<br />Build your MAP to get there.</p>
-            <button
-              disabled={busy || !setup?.google}
-              onClick={async () => {
-                setBusy(true);
-                setError("");
-                try {
-                  await signIn("google", {
-                    redirectTo: window.location.origin,
-                  });
-                } catch {
-                  setError(
-                    "Google sign-in could not start. Check the connection and retry.",
-                  );
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            >
-              {busy ? "Opening Google…" : "Build My Networth MAP"}
-            </button>
-            {setup && !setup.google && (
-              <p role="status">
-                Google sign-in is waiting for the app’s Google connection to be
-                configured.
-              </p>
-            )}
-            {setup && (!setup.coach || !setup.speech) && (
-              <p role="status">
-                {!setup.coach ? "The AI coach is not connected yet. " : ""}
-                {!setup.speech
-                  ? "Voice is waiting for its speech service connection."
-                  : ""}
-              </p>
-            )}
-            <details>
+        <>
+          {!building && <div className="original-map map-entry">
+            <main className="shell">
+              <NetworthWelcome
+                buttonLabel={busy ? "Opening Google…" : isAuthenticated ? "Start My Blueprint" : "Build My Networth MAP"}
+                disabled={busy || (isAuthenticated ? remembered === undefined : !setup?.google)}
+                onBuild={async () => {
+                  if (isAuthenticated) { setOpened(true); setBuilding(true); return; }
+                  setBusy(true); setError("");
+                  try { await signIn("google", {redirectTo: window.location.origin}); }
+                  catch { setError("Google sign-in could not start. Check the connection and retry."); }
+                  finally { setBusy(false); }
+                }}
+              />
+            </main>
+            {!isAuthenticated && <details className="entry-privacy">
               <summary>Privacy &amp; data</summary>
-              <p>
-                Your answers are processed by Convex and an AI provider. Voice
-                uses OpenAI to turn recordings into text. This app saves only
-                financial context and commitments from your answers automatically, plus change
-                history. Raw audio and full conversations are not retained by
-                this app. Provider retention has not been verified. Your
-                remembered information can be exported or deleted.
-              </p>
-            </details>
-          </section>
-        </main>
+              <p>Your answers are processed by Convex and an AI provider. Voice uses OpenAI to turn recordings into text. This app saves only financial context and commitments from your answers automatically, plus change history. Raw audio and full conversations are not retained by this app. Provider retention has not been verified. Your remembered information can be exported or deleted.</p>
+            </details>}
+            {setup && !setup.google && !isAuthenticated && <p role="status">Google sign-in is waiting for the app’s Google connection to be configured.</p>}
+            {setup && (!setup.coach || !setup.speech) && <p role="status">{!setup.coach ? "The AI coach is not connected yet. " : ""}{!setup.speech ? "Voice is waiting for its speech service connection." : ""}</p>}
+          </div>}
+          {isAuthenticated && <div hidden={!building}>{opened && <Huddle key="signed-in" />}</div>}
+        </>
       )}
       <footer className="sr-only">
         You choose your goal and action. Calculations use confirmed figures;

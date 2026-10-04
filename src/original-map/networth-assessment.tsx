@@ -1240,54 +1240,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus }
       )}
 
       {step === 0 && (
-        <section className="welcome">
-          <div className="hero-copy">
-            <p className="eyebrow">A guided 20-minute financial clarity assessment</p>
-            <h1 className="direction-headline">
-              <span>Your wealth.</span>
-              <span>Your vision.</span>
-              <em>Your next move.</em>
-            </h1>
-            <p>
-              Know your wealth. Define your vision. Make your next move with
-              clarity.
-            </p>
-            <button
-              className="primary"
-              onClick={() => setShowQuickStart(true)}
-            >
-              Build My Networth Map <span>→</span>
-            </button>
-            <small>
-              Remembered privately in your account;
-              an optional email is requested only after your result.
-            </small>
-            <small className="anonymous-insight-note">
-              Usage and feedback help improve the app. Your financial
-              answers stay private in your account.
-            </small>
-          </div>
-          <div className="journey-tiles">
-            <article>
-              <b>01</b>
-              <span><JourneyIcon kind="blueprint" />BLUEPRINT</span>
-              <h2>See where you are today</h2>
-              <p>Earn · Own · Owe · Spend · Invest</p>
-            </article>
-            <article>
-              <b>02</b>
-              <span><JourneyIcon kind="vision" />VISION</span>
-              <h2>Define where you want to go</h2>
-              <p>Security · Independence · Freedom</p>
-            </article>
-            <article>
-              <b>03</b>
-              <span><JourneyIcon kind="map" />MAP</span>
-              <h2>Choose what to focus on next</h2>
-              <p>Your actions assessed against your numbers</p>
-            </article>
-          </div>
-        </section>
+        <NetworthWelcome onBuild={() => setShowQuickStart(true)} />
       )}
 
       {step > 0 && step < 11 && (
@@ -3653,5 +3606,61 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus }
         </div>
       )}
     </main>
+  );
+}
+
+
+// Share the original welcome screen with the app entry point.
+export function NetworthWelcome({onBuild, buttonLabel = "Build My Networth Map", disabled = false}: {onBuild: () => void; buttonLabel?: string; disabled?: boolean}) {
+  return (
+        <section className="welcome">
+          <div className="hero-copy">
+            <p className="eyebrow">A guided 20-minute financial clarity assessment</p>
+            <h1 className="direction-headline">
+              <span>Your wealth.</span>
+              <span>Your vision.</span>
+              <em>Your next move.</em>
+            </h1>
+            <p>
+              Know your wealth. Define your vision. Make your next move with
+              clarity.
+            </p>
+            <button
+              className="primary"
+              onClick={onBuild}
+              disabled={disabled}
+            >
+              {buttonLabel} <span aria-hidden="true">→</span>
+            </button>
+            <small>
+              Remembered privately in your account;
+              an optional email is requested only after your result.
+            </small>
+            <small className="anonymous-insight-note">
+              Usage and feedback help improve the app. Your financial
+              answers stay private in your account.
+            </small>
+          </div>
+          <div className="journey-tiles">
+            <article>
+              <b>01</b>
+              <span><JourneyIcon kind="blueprint" />BLUEPRINT</span>
+              <h2>See where you are today</h2>
+              <p>Earn · Own · Owe · Spend · Invest</p>
+            </article>
+            <article>
+              <b>02</b>
+              <span><JourneyIcon kind="vision" />VISION</span>
+              <h2>Define where you want to go</h2>
+              <p>Security · Independence · Freedom</p>
+            </article>
+            <article>
+              <b>03</b>
+              <span><JourneyIcon kind="map" />MAP</span>
+              <h2>Choose what to focus on next</h2>
+              <p>Your actions assessed against your numbers</p>
+            </article>
+          </div>
+        </section>
   );
 }
