@@ -310,6 +310,12 @@ The full acceptance check is the real published journey on desktop and mobile:
 
 **Welcome → Google sign-in → successful authentication → available start button → explicit start → first assessment question.**
 
+## Local browser verification without a user login
+
+Run `npm run test:browser` to open a separate sample-data preview at `http://127.0.0.1:5174`. It renders the real interface with simulated sign-in, coaching and in-memory saving. It does not connect to Google, OpenAI or the production database, and cannot access user accounts. Reload resets its sample data.
+
+The sample preview has been checked at desktop and mobile viewport sizes: opening the assessment, sending an answer, correcting it, and viewing the pink diamond and readable glass chat. These checks do not prove production authentication, real AI responses or production persistence. The normal deployment excludes the sample preview and retains Google authentication.
+
 ## Commercial validation
 
 The original proposed offer is **₹999 for one month of Money Huddle check-ins**. Payment is a planned commercial test, not an implemented payment flow.

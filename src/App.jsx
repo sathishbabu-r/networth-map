@@ -16,8 +16,9 @@ import { NetworthMap } from "./NetworthMap.jsx";
 import { NetworthWelcome } from "./original-map/networth-assessment";
 import { memoryFromAssessment } from "../shared/map-engine";
 import "./style.css";
+import huddleDiamond from "./assets/huddle-diamond.svg";
 function HuddleIcon({ className = "" }) {
-  return <img className={"huddle-icon " + className} src="/money-huddle.svg" alt="" width="40" height="40" />;
+  return <img className={"huddle-icon " + className} src={huddleDiamond} alt="" width="40" height="40" />;
 }
 const today = () => {
   const d = new Date();
