@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { emptyMap, validateMap, supportedMapMetrics, progressFromHistory } from "../shared/map-engine";
+import { emptyMap, validateMap, supportedMapMetrics, progressFromHistory, assessmentFromMemory, memoryFromAssessment } from "../shared/map-engine";
 test("an empty or partial MAP never reports missing balances as zero net worth", () => {
   const map=emptyMap();
   expect(supportedMapMetrics(map)).toEqual([]);
@@ -36,4 +36,16 @@ test("progress retains earlier actions and uses the latest reported result witho
   const out={text:"Collected two lakh",actionStatus:"completed",amount:200000,impactType:"receivables_collection",occurredOn:"2026-10-04"};
   const rows=[{revision:1,newContent:{action:a}},{revision:2,newContent:{action:a,outcome:out}},{revision:3,newContent:{action:a,outcome:out}},{revision:4,newContent:{action:b,outcome:null}}];
   const result=progressFromHistory(rows,null);expect(result).toHaveLength(2);expect(result.find(r=>r.text===a.text).outcome.amount).toBe(200000);expect(result.find(r=>r.text===b.text).outcome).toBeNull();
+});
+
+
+test("review and reflection completion survives revisiting profile without changing financial amounts or unknowns",()=>{
+ const map=emptyMap();map.step=11;map.covered=["earn","own","owe","spend","invest","lifestyle","goals","milestone"];
+ Object.assign(map.data,{userType:"salaried",grossPersonalIncome:"1800000",effectiveTaxRate:"15"});
+ map.unknowns=["liabilities.loan.interestRate"];map.estimates=["grossPersonalIncome"];
+ const saved=memoryFromAssessment(assessmentFromMemory(map),map,1);
+ expect(saved.step).toBe(1);expect(saved.covered).toContain("blueprint");expect(saved.covered).toContain("reflect");
+ expect(saved.data).toEqual(map.data);expect(saved.unknowns).toEqual(map.unknowns);expect(saved.estimates).toEqual(map.estimates);
+ expect(supportedMapMetrics(saved)).toEqual(supportedMapMetrics(map));
+ expect(validateMap(saved).covered).toEqual(saved.covered);
 });

@@ -21,3 +21,8 @@ test("a MAP snapshot copies one supplied amount, preserves uncertainty and does 
  const fact=mapSnapshotFact(map);assert.equal(fact.amount,2400000);assert.equal(fact.kind,"estimate");assert.equal(fact.period,"annual");assert.equal(fact.asOf,"");
  map.unknowns=["grossPersonalIncome"];assert.equal(mapSnapshotFact(map),null);map.data.grossPersonalIncome="";map.unknowns=[];assert.equal(mapSnapshotFact(map),null);
 });
+test('a MAP snapshot respects section-level unknowns and estimates without manufacturing zero',async()=>{
+ const {mapSnapshotFact}=await import('../shared/commitment.mjs');
+ const map={data:{grossPersonalIncome:'2400000',monthlyNeeds:'',monthlyWants:'',annualInvesting:'',assets:[],liabilities:[]},estimates:['earn'],unknowns:[]};
+ assert.equal(mapSnapshotFact(map).kind,'estimate');map.unknowns=['earn'];assert.equal(mapSnapshotFact(map),null);
+});

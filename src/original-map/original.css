@@ -72,6 +72,60 @@ button:focus-visible { outline: 3px solid rgba(196,122,134,.5); outline-offset: 
 .topbar-actions { display: flex; align-items: center; gap: 18px; }
 .report-issue-trigger { min-height: 44px; padding: 0 14px; border: 1px solid rgba(143,77,82,.34); background: var(--rose-action); color: var(--navy); font-size: 13px; font-weight: 700; box-shadow: inset 0 1px 0 rgba(255,255,255,.58), 0 6px 16px rgba(143,77,82,.16); }
 .report-issue-trigger:hover { background: var(--rose-action-hover); }
+/* Ongoing progress uses the original MAP colours, fields and type. */
+.journey-section { width: min(100%, 980px); margin: 0 auto; padding: 36px max(4vw,24px) 80px; color: var(--navy); }
+.journey-section h1 { font-family: var(--font-display); font-size: 36px; line-height: 1.15; margin: 0 0 16px; }
+.journey-section h2 { font-size: 22px; margin: 28px 0 12px; }
+.journey-section p { max-width: 70ch; margin-bottom: 16px; line-height: 1.6; }
+.daily-check-in form { margin-top: 28px; }
+.daily-check-in .field { margin-bottom: 20px; }
+.daily-check-in .field > input, .daily-check-in .field > select, .daily-check-in .field > textarea { width: 100%; min-height: 44px; padding: 12px; margin-top: 8px; border: 1px solid var(--line); border-radius: 8px; background: white; color: var(--navy); font-size: 16px; }
+.daily-check-in .field > textarea { min-height: 88px; resize: vertical; }
+.daily-check-in .field > input:read-only { background: var(--porcelain); }
+.daily-check-in .field > input:focus-visible, .daily-check-in .field > select:focus-visible, .daily-check-in .field > textarea:focus-visible { outline: 2px solid var(--rose-dark); outline-offset: 2px; }
+.check-in-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.check-in-toggle { display: flex; align-items: center; gap: 12px; min-height: 44px; margin: 16px 0; font-size: 15px; }
+.check-in-toggle input { width: 20px; height: 20px; accent-color: var(--rose-dark); flex-shrink: 0; }
+.check-in-help { font-size: 14px; color: var(--slate); }
+.daily-check-in > .text-button { margin-top: 24px; }
+.progress-totals { display: flex; flex-wrap: wrap; gap: 24px 40px; margin: 28px 0; padding: 24px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.progress-totals > div { flex: 1; min-width: 150px; }
+.progress-totals dt { font-size: 14px; color: var(--slate); }
+.progress-totals dd { margin: 8px 0 0; font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.progress-activity { margin: 24px 0; padding: 24px; background: var(--porcelain); border-radius: 12px; }
+.progress-activity figcaption { margin-bottom: 20px; font-size: 18px; font-weight: 600; }
+.activity-bars { display: grid; grid-template-columns: repeat(14,minmax(0,1fr)); gap: 8px; }
+.activity-track { height: 120px; display: flex; align-items: flex-end; border-bottom: 1px solid var(--line); }
+.activity-track span { width: 100%; background: #17603b; border-radius: 4px 4px 0 0; }
+.activity-day small { display: block; margin: 8px 0; text-align: center; font-variant-numeric: tabular-nums; }
+.progress-activity p { font-size: 13px; margin: 12px 0 0; }
+.latest-result > strong { font-size: 28px; color: #17603b; font-variant-numeric: tabular-nums; }
+.progress-journal-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 32px; }
+.progress-journal { padding: 0; list-style: none; }
+.progress-journal li { padding: 24px 0; border-bottom: 1px solid var(--line); }
+.journal-date { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; margin-bottom: 12px; }
+.journal-status.completed { color: #17603b; }
+.journal-status.partial { color: var(--rose-dark); }
+.progress-journal h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+.progress-journal p { margin-bottom: 8px; }
+.dashboard-review { margin-top: 40px; padding-top: 12px; border-top: 1px solid var(--line); }
+.final-financial-review { margin-top: 32px; }
+.completed-map-review { max-width: 980px; margin: 0 auto; padding: 24px max(4vw,24px) 60px; }
+@media (max-width: 600px) { .journey-section { padding: 28px 16px 80px; } .journey-section h1 { font-size: 28px; } .check-in-pair { grid-template-columns: 1fr; gap: 0; } .progress-journal-heading { align-items: flex-start; flex-direction: column; } .progress-totals dd { font-size: 26px; } .activity-bars { gap: 4px; } .progress-activity { padding: 16px; } }
+@media print { .journey-section, .final-financial-review, .completed-map-review { display: none !important; } }
+.assessment-steps { padding: 12px max(4vw,24px); background: var(--porcelain); overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--line) var(--porcelain); }
+.assessment-steps ol { display: flex; flex-wrap: nowrap; align-items: center; gap: 4px; width: max-content; min-width: 100%; list-style: none; margin: 0; padding: 0; }
+.assessment-steps li { flex: 0 0 auto; }
+.assessment-steps button { width: auto; min-height: 44px; display: flex; align-items: center; gap: 6px; padding: 8px; white-space: nowrap; border: 1px solid transparent; background: transparent; color: var(--navy); text-align: left; font-size: 13px; }
+.assessment-steps button:disabled { color: var(--slate); opacity: .7; cursor: not-allowed; }
+.assessment-steps button:hover:not(:disabled) { background: white; }
+.assessment-steps button[aria-current="step"] { border-color: var(--rose-dark); background: white; font-weight: 700; }
+.assessment-steps button:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+.step-marker { width: 24px; height: 24px; flex-shrink: 0; display: grid; place-items: center; border: 1px solid currentColor; border-radius: 50%; }
+.step-completed .step-marker { color: #17603b; background: #e7f4ed; }
+.step-marker svg { width: 20px; height: 20px; }
+@media (max-width: 600px) { .assessment-steps { padding: 8px 12px; } }
+@media print { .assessment-steps { display: none !important; } }
 .progress { position: relative; height: 51px; padding: 0 max(4vw,24px); display: flex; align-items: center; background: var(--porcelain); overflow: hidden; }
 .progress div { width: 100%; display: flex; justify-content: space-between; color: var(--navy); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; }
 .progress div > span { color: var(--rose-dark); font-family: var(--font-display); font-size: 15px; font-weight: 600; letter-spacing: .08em; }
@@ -853,7 +907,7 @@ button:focus-visible { outline: 3px solid rgba(196,122,134,.5); outline-offset: 
   .income-reveal > header { align-items: flex-start; flex-direction: column; gap: 3px; padding-top: 10px; padding-bottom: 10px; }
   .income-reveal > div { grid-template-columns: 1fr; }
   .income-reveal .metric { border-right: 0; border-bottom: 1px solid #e5c8cc; }
-  .wizard-actions { position: sticky; z-index: 8; bottom: 0; margin-right: -18px; margin-left: -18px; padding: 12px 18px calc(12px + env(safe-area-inset-bottom)); gap: 10px; border-top: 1px solid var(--line); background: rgba(255,255,255,.94); box-shadow: 0 -10px 28px rgba(16,26,48,.09); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+  .wizard-actions { position: static; margin-right: -18px; margin-left: -18px; padding: 12px 18px calc(12px + env(safe-area-inset-bottom)); gap: 10px; border-top: 1px solid var(--line); background: rgba(255,255,255,.94); }
   .wizard-actions button { flex: 1; padding: 0 14px; }
   .map-page { padding: 45px 18px 32px; }
   .map-inner > .eyebrow { margin-bottom: 10px; }
@@ -960,3 +1014,11 @@ button:focus-visible { outline: 3px solid rgba(196,122,134,.5); outline-offset: 
 }
 
 }
+
+/* Missing financial data stays readable on the existing MAP screens. */
+.financial-incomplete { display: block; max-width: 100%; }
+.financial-incomplete h1 { font-size: clamp(24px, 4vw, 36px); }
+.financial-incomplete p { margin: 16px 0; }
+.financial-incomplete button { margin: 4px 16px 4px 0; white-space: normal; text-align: left; }
+.financial-incomplete dl > div { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 12px 0; }
+.financial-incomplete dd { margin: 0; font-weight: 700; }

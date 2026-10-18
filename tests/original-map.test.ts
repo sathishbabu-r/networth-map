@@ -28,7 +28,7 @@ describe("Networth MAP V2 engine", () => {
     expect(localIsoDate(new Date(2026, 8, 3, 0, 15))).toBe("2026-09-03");
   });
 
-  it("preserves decimal tax rates and blank liability rates when restoring", () => {
+  it("preserves decimal tax rates and unknown liability rates and repayments when restoring", () => {
     const restored = normalizeSavedAssessment({
       version: 15,
       expiresAt: Date.now() + 60_000,
@@ -51,7 +51,7 @@ describe("Networth MAP V2 engine", () => {
 
     expect(restored?.data.effectiveTaxRate).toBe("18.75");
     expect(restored?.data.liabilities[0].interestRate).toBe("");
-    expect(restored?.data.liabilities[0].annualRepayment).toBe("0");
+    expect(restored?.data.liabilities[0].annualRepayment).toBe("");
     expect(restored?.data.liabilities[0].repaymentIncludedInNeeds).toBe(false);
     expect(restored?.data.loanRepaymentIncludedInNeeds).toBe(false);
   });

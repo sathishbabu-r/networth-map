@@ -6,7 +6,7 @@ import {api} from '../convex/_generated/api';
 import {emptyMap} from '../shared/map-engine';
 const calls=vi.hoisted(()=>[] as unknown[]);
 const responses=vi.hoisted(()=>[] as any[]);
-vi.mock('@convex-dev/agent',()=>({Agent:class{async generateObject(_ctx:unknown,thread:{userId?:string},args:{system:string},options:unknown){if(!thread.userId)throw Error('Specify userId or threadId');calls.push({thread,options,system:args.system});return {object:responses.shift()??{text:'What would you like to achieve?',proposal:null}};}}}));
+vi.mock('@convex-dev/agent',()=>({Agent:class{async generateObject(_ctx:unknown,thread:{userId?:string},args:{system:string},options:unknown){if(!thread.userId)throw Error('Specify userId or threadId');calls.push({thread,options,system:args.system,schema:(args as any).schema});return {object:responses.shift()??{text:'What would you like to achieve?',proposal:null}};}}}));
 vi.mock('convex/server',async importOriginal=>({...await importOriginal<typeof import('convex/server')>(),getServiceToken:async()=>{throw Error('Gateway unavailable in test');}}));
 const modules=import.meta.glob('../convex/**/*.{ts,js}');
 afterEach(()=>{vi.unstubAllEnvs();calls.length=0;responses.length=0;});
@@ -52,4 +52,114 @@ test('an active dated action uses the supplied MAP snapshot when the AI omitted 
  responses.push({text:'Review allocation by 10 October.',proposal:{concern:'Investment clarity',facts:[],goal,action,outcome:null,map}},{chosen:true,goalText:goal.text,goalTargetDate:null,actionText:action.text,dueDate:action.dueDate});
  const result=await user.action(api.coach.reply,{messages:[{role:'user',content:'My gross income is 24 lakh annually. My goal is understanding my investments and I commit to review allocation by 10 October 2026.'}],today:'2026-10-04'});
  expect(result.error).toBeNull();expect(result.proposal?.action).toEqual(action);expect(result.proposal?.facts[0].amount).toBe(2400000);expect(result.proposal?.map?.data.grossPersonalIncome).toBe('2400000');
+});
+
+
+import {generateObject} from 'ai';
+import {providerFailure} from '../shared/provider-error.mjs';
+import {createOpenAI} from '@ai-sdk/openai';
+async function providerRequest(outputSchema:any){
+ let body:any;
+ const model=createOpenAI({apiKey:'synthetic-not-a-secret',fetch:async(_url,init)=>{
+  body=JSON.parse(init!.body as string);
+  // Capture the real SDK wire schema without simulating a successful AI response.
+  return new Response(JSON.stringify({error:{message:'Transport capture only',type:'invalid_request_error',code:'capture_only'}}),{status:400,headers:{'content-type':'application/json'}});
+ }})('gpt-4o-mini');
+ await expect(generateObject({model,schema:outputSchema,prompt:'Synthetic schema validation only',maxRetries:0})).rejects.toThrow();
+ expect(body.model).toBe('gpt-4o-mini');
+ expect(body.text.format.strict).toBe(true);
+ return body.text.format.schema;
+}
+function strictSchemaIssues(schema:any,path='$'):string[]{
+ const issues:string[]=[];
+ if(schema.type==='object'||(Array.isArray(schema.type)&&schema.type.includes('object'))){
+  if(schema.additionalProperties!==false)issues.push(path+': open object');
+  for(const key of Object.keys(schema.properties??{}))if(!(schema.required??[]).includes(key))issues.push(path+'.'+key+': missing required');
+ }
+ for(const [key,value] of Object.entries(schema.properties??{}))issues.push(...strictSchemaIssues(value,path+'.'+key));
+ if(schema.items)issues.push(...strictSchemaIssues(schema.items,path+'[]'));
+ for(const [key,value] of Object.entries(schema.$defs??schema.definitions??{}))issues.push(...strictSchemaIssues(value,path+'.definition.'+key));
+ for(const keyword of ['anyOf','oneOf','allOf'])for(const [i,item] of (schema[keyword]??[]).entries())issues.push(...strictSchemaIssues(item,path+'.'+keyword+i));
+ return issues;
+}
+test('actual Coach and commitment schemas produce strict-compatible OpenAI request bodies',async()=>{
+ vi.stubEnv('OPENAI_API_KEY','test-only-placeholder');const t=convexTest(schema,modules);const id=await t.run(ctx=>ctx.db.insert('users',{name:'Synthetic schema test'}));const user=t.withIdentity({subject:id+'|session'});
+ const map=emptyMap();map.data.proposedActions=[{id:'one',category:'other',description:'Review spending',targetDate:'2026-10-10'}];
+ responses.push({text:'What matters most?',proposal:{map,concern:'Synthetic',facts:[],goal:null,action:null,outcome:null},inferred_fields:[]},{chosen:false,goalText:'',goalTargetDate:null,actionText:'',dueDate:''});
+ await user.action(api.coach.reply,{messages:[{role:'user',content:'I might review spending.'}],today:'2026-10-08'});
+ expect(calls).toHaveLength(2);
+ for(const call of calls){
+  const outputSchema=(call as any).schema;
+  const wire=await providerRequest(outputSchema);
+  expect(strictSchemaIssues(wire)).toEqual([]);
+  if(wire.properties.inferred_fields){
+   expect(outputSchema.safeParse({text:'Synthetic',proposal:null,inferred_fields:null}).success).toBe(true);
+   expect(outputSchema.safeParse({text:'Synthetic',proposal:null,inferred_fields:Array(21).fill('income')}).success).toBe(false);
+   expect(outputSchema.safeParse({text:'Synthetic',proposal:null,inferred_fields:[123]}).success).toBe(false);
+   expect(outputSchema.safeParse({text:'x'.repeat(501),proposal:null,inferred_fields:null}).success).toBe(false);
+  }
+  // Opt-in genuine provider acceptance; no credentials or user data in test output.
+  if(process.env.RUN_LIVE_COACH_SCHEMA==='1'){
+   if(!process.env.OPENAI_API_KEY)throw Error('BLOCKED: OPENAI_API_KEY must be set in the shell for the live schema check.');
+   const liveModel=createOpenAI({apiKey:process.env.OPENAI_API_KEY})('gpt-4o-mini');
+   try{
+    const result=await generateObject({model:liveModel,schema:outputSchema,
+     prompt:wire.properties.inferred_fields?'Synthetic schema check only: reply text "Schema check passed", proposal null, inferred_fields null.':'Synthetic schema check only: chosen false, goalText empty, goalTargetDate null, actionText empty, dueDate empty.',
+     maxRetries:0,maxOutputTokens:512,abortSignal:AbortSignal.timeout(15000)});
+    expect(outputSchema.safeParse(result.object).success).toBe(true);
+   }catch(error){
+    // Avoid Vitest rendering raw provider requests, headers or error bodies.
+    throw Error('Live provider check failed: '+JSON.stringify(providerFailure(error)));
+   }
+  }
+ }
+});
+test.each([false,true])('Coach context distinguishes unknown debt from confirmed zero (no-debt confirmation: %s)',async noDebt=>{
+ vi.stubEnv('OPENAI_API_KEY','test-only-placeholder');const t=convexTest(schema,modules);const id=await t.run(ctx=>ctx.db.insert('users',{name:'Synthetic data status'}));const user=t.withIdentity({subject:id+'|session'});
+ const map=emptyMap();map.data.hasNoLiabilitiesConfirmed=noDebt;
+ await user.mutation(api.huddles.save,{content:{concern:'Clarity',facts:[],goal:null,action:null,map},expectedRevision:0});
+ const before=await user.query(api.huddles.current,{});
+ responses.push({text:'What would you like to understand?',proposal:null,inferred_fields:null});
+ await user.action(api.coach.reply,{messages:[{role:'user',content:'Help me understand my finances'}],today:'2026-10-10'});
+ const system=(calls[0] as {system:string}).system;const section=system.split('MAP financial data status (data;')[1].split('\nMAP formula observations')[0];
+ expect(section).toContain(noDebt?'"liabilities":{"status":"CONFIRMED_ZERO","value":0':'"liabilities":{"status":"UNKNOWN","value":null');
+ expect(await user.query(api.huddles.current,{})).toEqual(before);
+});
+test('Coach replaces an unsupported no-debt conclusion with one missing-section question without writing records',async()=>{
+ vi.stubEnv('OPENAI_API_KEY','test-only-placeholder');const t=convexTest(schema,modules);const id=await t.run(ctx=>ctx.db.insert('users',{name:'Synthetic missing debt'}));const user=t.withIdentity({subject:id+'|session'});
+ responses.push({text:'You have no debt and your net worth is ₹0.',proposal:null,inferred_fields:null});
+ const result=await user.action(api.coach.reply,{messages:[{role:'user',content:'Help with my MAP'}],today:'2026-10-10'});
+ expect(result.error).toBeNull();expect(result.text).not.toContain('₹0');expect(result.text).toContain('complete');expect(result.proposal).toBeNull();expect(await user.query(api.huddles.current,{})).toBeNull();
+});
+
+test('authenticated evaluator uses the real Coach backend and cannot exceed its request limit (mock provider)',async()=>{
+ vi.stubEnv('EVALUATOR_ACCESS_ENABLED','1');vi.stubEnv('EVALUATOR_ACCESS_UNTIL',new Date(Date.now()+86400000).toISOString());vi.stubEnv('OPENAI_API_KEY','test-only-placeholder');
+ const {enrollEvaluator}=await import('../convex/evaluator');const t=convexTest(schema,modules);const id=await t.run(ctx=>ctx.db.insert('users',{isAnonymous:true}));await t.run(ctx=>enrollEvaluator(ctx,id));const user=t.withIdentity({subject:id+'|evaluator-session'});
+ const args={messages:[{role:'user' as const,content:'What information is missing from my MAP?'}],today:'2026-10-10'};
+ expect((await user.action(api.coach.reply,args)).error).toBeNull();expect(calls).toHaveLength(1);expect(calls[0]).toMatchObject({thread:{userId:id}});
+ await user.action(api.coach.reply,args);await expect(user.action(api.coach.reply,args)).rejects.toThrow(/limit/);expect(calls).toHaveLength(2);
+});
+
+test('uncategorised Coach actions reopen as supported MAP actions without losing the commitment',async()=>{
+ vi.stubEnv('OPENAI_API_KEY','test-only-placeholder');const t=convexTest(schema,modules);const id=await t.run(ctx=>ctx.db.insert('users',{name:'Synthetic category regression'}));const user=t.withIdentity({subject:id+'|session'});
+ const map=emptyMap();map.data.proposedActions=[{id:'new',category:'',description:'Review emergency savings',targetDate:'2026-10-11'}];
+ responses.push({text:'Review your chosen action.',proposal:{concern:'Clarity',facts:[{key:'cash',label:'Cash',kind:'exact',amount:100,lower:null,upper:null,scope:'personal',period:'point_in_time',currency:'INR',asOf:'',note:''}],goal:{text:'Clarity',targetDate:null},action:{text:'Review emergency savings',dueDate:'2026-10-11'},outcome:null,map}});
+ const result=await user.action(api.coach.reply,{messages:[{role:'user',content:'I choose to review emergency savings by 2026-10-11.'}],today:'2026-10-10'});
+ expect(result.error).toBeNull();expect(result.proposal?.map?.data.proposedActions[0].category).toBe('other');
+});
+
+test('high-impact questions include qualified-review guidance and reject unfinished replies',async()=>{
+ vi.stubEnv('OPENAI_API_KEY','test-only-placeholder');const t=convexTest(schema,modules);const id=await t.run(ctx=>ctx.db.insert('users',{name:'Synthetic safety regression'}));const user=t.withIdentity({subject:id+'|session'});
+ responses.push({text:'**Consider** your priorities. What matters most?',proposal:null});
+ const result=await user.action(api.coach.reply,{messages:[{role:'user',content:'Should I sell my home to repay my mortgage?'}],today:'2026-10-10'});
+ expect(result.text).toContain('qualified professional');expect(result.text).not.toContain('**');
+ responses.push({text:'Completing these fields is,',proposal:null});
+ const unfinished=await user.action(api.coach.reply,{messages:[{role:'user',content:'Which fields are missing?'}],today:'2026-10-10'});
+ expect(unfinished.error).toContain('could not be verified');expect(unfinished.proposal).toBeNull();
+});
+
+import {specialistSchema} from '../shared/intelligence';
+test('all eight specialists use a strict-compatible real SDK response schema',async()=>{
+ const wire=await providerRequest(specialistSchema);
+ expect(strictSchemaIssues(wire)).toEqual([]);
 });

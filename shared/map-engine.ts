@@ -1,5 +1,6 @@
 import { mapSchema, type MapMemory } from "./map-schema";
 import { calculateMap, emptyAssessment, type AssessmentData } from "./networth-engine";
+import { financialStatus, combineFinancial, pathMarked, type FinancialValue } from "./financial-status";
 export const mapSections = ["earn", "own", "owe", "spend", "invest", "lifestyle", "goals", "milestone"] as const;
 export const emptyMap = (): MapMemory => ({ step: 0, data: { ...emptyAssessment, effectiveTaxRate: "", assets: [], liabilities: [], proposedActions: [], wealthGoalDetails: [] }, covered: [], estimates: [], unknowns: [] });
 export function validateMap(value: unknown): MapMemory {
@@ -17,24 +18,17 @@ export function validateMap(value: unknown): MapMemory {
 export function supportedMapMetrics(map: MapMemory | null | undefined) {
   if (!map) return [];
   const d = map.data;
-  const data: AssessmentData = { ...d, wealthGoalDetails: Object.fromEntries(d.wealthGoalDetails.map(({ category, ...detail }) => [category, detail])) };
-  const computed = calculateMap(data);
-  const known = (path: string, value: string) => value !== "" && !map.unknowns.includes(path);
-  const own = map.covered.includes("own") && !map.unknowns.includes("own") && d.assets.every(a => known(`assets.${a.id}.value`, a.value));
-  const owe = map.covered.includes("owe") && !map.unknowns.includes("owe") && (d.liabilities.length > 0 || d.hasNoLiabilitiesConfirmed) && d.liabilities.every(l=>known(`liabilities.${l.id}.value`,l.value));
-  const spend = known("monthlyNeeds",d.monthlyNeeds) && known("monthlyWants",d.monthlyWants);
-  const gross = known("grossPersonalIncome",d.grossPersonalIncome) && known("effectiveTaxRate",d.effectiveTaxRate);
-  const repayment = map.covered.includes("owe") && d.liabilities.every(l=>known(`liabilities.${l.id}.annualRepayment`,l.annualRepayment));
-  const metrics: { key:string; label:string; value:number; formula:string; estimated:boolean }[] = [];
-  const add = (key:string,label:string,value:number,formula:string) => metrics.push({key,label,value,formula,estimated:map.estimates.length>0});
-  if(own) add("assets","Total assets",computed.totalAssets,"Sum of the assets you listed. Business ownership must use your share of equity after business debt; underlying business assets are excluded.");
-  if(owe) add("liabilities","Total liabilities",computed.totalLiabilities,"Sum of the outstanding personally borne liabilities you listed.");
-  if(own&&owe) add("networth","Net worth",computed.networth,`${computed.totalAssets} assets − ${computed.totalLiabilities} liabilities`);
-  if(gross) add("takehome","Annual take-home income",computed.takeHomeIncome,`${d.grossPersonalIncome} gross annual income × (1 − ${d.effectiveTaxRate}% estimated tax)`);
-  if(spend) add("lifestyle","Annual lifestyle costs",computed.currentLifestyle,`(${d.monthlyNeeds} monthly needs + ${d.monthlyWants} monthly wants) × 12`);
-  if(gross&&spend&&owe&&repayment) add("surplus","Annual surplus before investing",computed.availableSurplus,"Take-home income − annual needs − annual wants − loan repayments not already included in needs");
-  if(gross&&spend&&owe&&repayment&&known("annualInvesting",d.annualInvesting)) add("afterinvesting","Annual cash after investing",computed.cashAfterInvesting,`Annual surplus − ${d.annualInvesting} annual investing`);
-  if(d.visionChoiceConfirmed && d.visionLevel && spend && (d.visionLevel!=="freedom" || known("desiredLifestyleMonthly",d.desiredLifestyleMonthly)) && d.lifestyleChanges.every(l=>known(`lifestyleChanges.${l.id}.monthlyAmount`,l.monthlyAmount))) add("visioncost","Annual cost of your vision",computed.visionAnnualCost,"Chosen lifestyle baseline plus the recurring changes you listed, annualised");
+  const states = financialStatus(map).metrics;
+  const metrics: { key:string; label:string; value:number; formula:string; estimated:boolean; status:FinancialValue["status"] }[] = [];
+  const add = (key:keyof typeof states,label:string,formula:string) => {const state=states[key];if(state.value!==null)metrics.push({key,label,value:state.value,formula,estimated:state.status==="ESTIMATED",status:state.status});};
+  add("assets","Total assets","Sum of the assets you listed. Business ownership must use your share of equity after business debt; underlying business assets are excluded.");
+  add("liabilities","Total liabilities","Sum of the outstanding personally borne liabilities you listed, or your explicit no-debt confirmation.");
+  add("networth","Net worth",`${states.assets.value} assets − ${states.liabilities.value} liabilities`);
+  add("takehome","Annual take-home income",`${d.grossPersonalIncome} gross annual income × (1 − ${d.effectiveTaxRate}% estimated tax)`);
+  add("lifestyle","Annual lifestyle costs",`(${d.monthlyNeeds} monthly needs + ${d.monthlyWants} monthly wants) × 12`);
+  add("surplus","Annual surplus before investing","Take-home income − annual needs − annual wants − loan repayments not already included in needs");
+  add("afterinvesting","Annual cash after investing",`Annual surplus − ${d.annualInvesting} annual investing`);
+  add("visioncost","Annual cost of your vision","Chosen lifestyle baseline plus the recurring changes you listed, annualised");
   return metrics;
 }
 export function progressFromHistory(rows: any[], current: any) {
@@ -53,13 +47,48 @@ export function progressFromHistory(rows: any[], current: any) {
 }
 
 export function assessmentFromMemory(map: MapMemory | null | undefined): AssessmentData {
-  if (!map) return { ...emptyAssessment };
-  return {...map.data, wealthGoalDetails:Object.fromEntries(map.data.wealthGoalDetails.map(({category,...detail})=>[category,detail]))};
+  if (!map) return { ...emptyMap().data, wealthGoalDetails: {} };
+  return {...map.data, proposedActions:map.data.proposedActions.map(a=>({...a,category:a.category || 'other'})), wealthGoalDetails:Object.fromEntries(map.data.wealthGoalDetails.map(({category,...detail})=>[category,detail]))};
 }
 export function memoryFromAssessment(data: AssessmentData, previous: MapMemory | null | undefined, step: number): MapMemory {
   const existing=previous??emptyMap();
   const result:MapMemory={...existing,covered:[...existing.covered],estimates:[...existing.estimates],unknowns:[...existing.unknowns],step,data:{...data,assets:data.assets.map(a=>({...a,annualNetIncome:a.annualNetIncome??""})),liabilities:data.liabilities.map(l=>({...l,interestRate:l.interestRate??"",annualRepayment:l.annualRepayment??"",repaymentIncludedInNeeds:l.repaymentIncludedInNeeds??false})),proposedActions:data.proposedActions.map(a=>({...a,targetDate:a.targetDate??""})),wealthGoalDetails:Object.entries(data.wealthGoalDetails).filter(([,v])=>v).map(([category,detail])=>({category:category as any,...detail!}))}};
-  const stepSection:Record<number,typeof mapSections[number]>={1:"earn",2:"own",3:"owe",4:"spend",5:"invest",7:"lifestyle",8:"goals",9:"milestone"};
-  for (const [n,name] of Object.entries(stepSection)) if (Number(n)<step&&!result.covered.includes(name)) result.covered.push(name);
+  const before=financialStatus(existing),priorAmounts=financialStatus({...existing,unknowns:[]}),after=financialStatus({...result,unknowns:[]});
+  const edited=Object.keys(after.inputs).filter(path=>after.inputs[path].value!==null && (!before.inputs[path] || after.inputs[path].value!==priorAmounts.inputs[path]?.value));
+  result.unknowns=result.unknowns.filter(path=>!edited.includes(path));
+  if(data.hasNoLiabilitiesConfirmed&&!existing.data.hasNoLiabilitiesConfirmed&&!data.liabilities.length)result.unknowns=result.unknowns.filter(path=>path!=="owe"&&path!=="liabilities"&&path!=="hasNoLiabilitiesConfirmed");
+  // A previously unknown section is cleared only when its edited inputs are all supplied and the user leaves that section.
+  const sections:Record<number,string>={1:"earn",2:"own",3:"owe",4:"spend",5:"invest"};
+  const completedSection=sections[existing.step];
+  if(completedSection&&step===existing.step+1&&edited.some(path=>pathMarked([completedSection],path))){
+    const required=completedSection==="own"?data.assets.map(a=>`assets.${a.id}.value`):completedSection==="owe"?data.liabilities.map(l=>`liabilities.${l.id}.value`):completedSection==="earn"?["grossPersonalIncome","effectiveTaxRate"]:completedSection==="spend"?["monthlyNeeds","monthlyWants"]:["annualInvesting"];
+    if(required.length&&required.every(path=>after.inputs[path]?.value!==null))result.unknowns=result.unknowns.filter(path=>path!==completedSection);
+  }
+  const stepSection:Record<number,MapMemory["covered"][number]>={1:"earn",2:"own",3:"owe",4:"spend",5:"invest",6:"blueprint",7:"lifestyle",8:"goals",9:"milestone",10:"reflect"};
+  for (const [n,name] of Object.entries(stepSection)) if ((Number(n)<step || ((name==="blueprint" || name==="reflect") && Number(n)<existing.step))&&!result.covered.includes(name)) result.covered.push(name);
   return validateMap(result);
+}
+
+// The legacy arithmetic engine is used only behind this data-status guard.
+export function assessedMap(map:MapMemory) {
+ const raw=calculateMap(assessmentFromMemory(map)),status=financialStatus(map),m=status.metrics;
+ const blueprint={...raw}, values:Record<string,FinancialValue>={};
+ const direct:Record<string,FinancialValue>={totalAssets:m.assets,totalLiabilities:m.liabilities,networth:m.networth,takeHomeIncome:m.takehome,annualNeeds:m.needs,annualWants:m.wants,currentLifestyle:m.lifestyle,availableSurplus:m.surplus,cashAfterInvesting:m.afterinvesting,annualInvesting:m.investing,totalAssetIncome:m.assetincome,totalAnnualInterest:m.interest,totalAnnualDebtRepayment:m.repayments,annualDebtRepaymentDeducted:m.deducted,visionAnnualCost:m.visioncost};
+ for(const [key,state] of Object.entries(direct)){values[key]=state;(blueprint as any)[key]=state.value??Number.NaN;}
+ const timeline=map.data.targetTiming==='year'?[status.inputs.targetYear]:[status.inputs.currentAge,status.inputs.targetAge];
+ const target=map.data.wealthMilestoneChoice==='yes'?status.inputs.targetNetworth:m.visioncost;
+ const dependencies:Record<string,FinancialValue[]>={
+  estimatedTax:[m.takehome],wealthAssets:[m.assets],personalAssets:[m.assets],incomeGeneratingAssets:[m.assets,m.assetincome],accessibleAssets:[m.assets],
+  investingRate:[m.investing,m.takehome],wealthAssetPercent:[m.assets],personalAssetPercent:[m.assets],debtPercent:[m.assets,m.liabilities],propertyPercent:[m.assets],accessibleMonths:[m.assets,m.lifestyle],largestAssetPercent:[m.assets],assetIncomeYield:[m.assets,m.assetincome],networthIncomeYield:[m.assetincome,m.networth],lifestyleFundedByAssetIncome:[m.assetincome,m.lifestyle],assetIncomeInterestCoverage:[m.assetincome,m.interest],lifestyleCostShareOfTakeHome:[m.lifestyle,m.takehome],
+  yearsToVision:timeline,visionFundingGap:[m.networth,target],requiredMonthlyInvestment:[m.networth,target,...timeline],
+ };
+ const denominators:Record<string,number|null>={investingRate:m.takehome.value,wealthAssetPercent:m.assets.value,personalAssetPercent:m.assets.value,debtPercent:m.assets.value,propertyPercent:m.assets.value,accessibleMonths:m.lifestyle.value,largestAssetPercent:m.assets.value,assetIncomeYield:raw.incomeGeneratingAssets,networthIncomeYield:m.networth.value,lifestyleFundedByAssetIncome:m.lifestyle.value,assetIncomeInterestCoverage:m.interest.value,lifestyleCostShareOfTakeHome:m.takehome.value,requiredMonthlyInvestment:raw.yearsToVision};
+ for(const [key,inputs] of Object.entries(dependencies)){
+  const denominator=denominators[key];
+  values[key]=combineFinancial(inputs,()=>denominator!==undefined&&(denominator===null||denominator<=0)?Number.NaN:(raw as any)[key]??Number.NaN);
+  (blueprint as any)[key]=values[key].value??((raw as any)[key]===null?null:Number.NaN);
+ }
+ if(m.assets.value===null)blueprint.largestAsset=null;
+ if(!status.ready){blueprint.findings=[];blueprint.nextFindings=[];blueprint.unaddressedFindings=[];blueprint.actionAssessments=[];}
+ return {blueprint,status,values};
 }

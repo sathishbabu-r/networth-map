@@ -1,13 +1,13 @@
+import {mapRecommendations as recommendationsForMap} from '../../shared/map-recommendations';
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { assessmentFromMemory, memoryFromAssessment } from "../../shared/map-engine";
+import { assessmentFromMemory, memoryFromAssessment, assessedMap, supportedMapMetrics } from "../../shared/map-engine";
+import { formatFinancial, combineFinancial, type FinancialValue, missingMapSection } from "../../shared/financial-status";
 import type { Id } from "../../convex/_generated/dataModel";
 import {
   actionCategoryLabels,
   assetCategoryLabels,
-  calculateAnnualInterest,
-  calculateMap,
   emptyAssessment,
   formatActionsForClipboard,
   liabilityTypeLabels,
@@ -52,15 +52,16 @@ const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
 const CALENDLY_CONTACT_URL = "https://calendly.com/sathishbabur/new-meeting";
 const WHATSAPP_CONTACT_URL =
   "https://wa.me/919884498689?text=Hi%2C%20I%20completed%20my%20Networth%20MAP%20and%20would%20like%20help%20understanding%20my%20priorities%20and%20practical%20next%20steps.";
-const money = new Intl.NumberFormat("en-IN", {
+const moneyFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
   currency: "INR",
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 0, maximumFractionDigits: 2,
 });
-const digits = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 });
+const money = { format: (value: number) => Number.isFinite(value) ? moneyFormatter.format(value) : "Not provided" };
+const digits = new Intl.NumberFormat("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 const stepNames = [
   "Welcome",
-  "Earn",
+  "Personal Profiling",
   "Own",
   "Owe",
   "Spend",
@@ -69,9 +70,10 @@ const stepNames = [
   "Lifestyle",
   "Goals",
   "Milestone",
-  "Reflect",
+  "Financial Review",
   "MAP",
 ];
+const stepNavigationLabels = ["", "Profile", "Assets", "Liabilities", "Spending", "Investing", "Plan", "Vision", "Goals", "Milestone", "Review"];
 const nextStepLabels: Record<number, string> = {
   1: "Add My Assets",
   2: "Add My Liabilities",
@@ -219,7 +221,7 @@ const isMoneyValue = (value: string, allowZero = false) => {
   if (value === "") return false;
   const amount = Number(value);
   return (
-    Number.isSafeInteger(amount) &&
+    Number.isFinite(amount) && amount <= Number.MAX_SAFE_INTEGER &&
     (allowZero ? amount >= 0 : amount > 0)
   );
 };
@@ -243,7 +245,7 @@ const questionMoney = (value: number) => {
 const monthlyQuestionMoney = (value: number) =>
   `${questionMoney(value)}\u00a0per\u00a0month`;
 const metricPercent = (value: number | null) =>
-  value === null ? "Not available" : `${value.toFixed(1)}%`;
+  value === null || !Number.isFinite(value) ? "Not provided" : `${value.toFixed(1)}%`;
 const percentageOf = (part: number, whole: number) =>
   whole > 0 ? (part / whole) * 100 : null;
 const compactLabel = (value: string, maxLength = 14) =>
@@ -403,7 +405,7 @@ export function normalizeSavedAssessment(value: unknown): SavedAssessment | null
           : "other") as LiabilityType,
         value: storedString(liability.value),
         interestRate: storedRate(liability.interestRate),
-        annualRepayment: storedString(liability.annualRepayment) || "0",
+        annualRepayment: storedString(liability.annualRepayment),
         repaymentIncludedInNeeds:
           typeof liability.repaymentIncludedInNeeds === "boolean"
             ? liability.repaymentIncludedInNeeds
@@ -488,7 +490,9 @@ function CurrencyField({
   required = true,
   invalid = false,
   errorMessage,
+  status,
 }: {
+  status?: FinancialValue;
   label: string;
   value: string;
   onChange: (value: string) => void;
@@ -497,7 +501,9 @@ function CurrencyField({
   invalid?: boolean;
   errorMessage?: string;
 }) {
-  const numericValue = numberValue(value);
+  const [typed, setTyped] = useState<string | null>(null);
+  const [moneyError, setMoneyError] = useState("");
+  const numericValue = Math.max(0, numberValue(value));
   const isMonthly = /monthly/i.test(label);
   const isLargeBalance = /current value|outstanding|milestone|amount today|financial freedom target/i.test(label);
   const suggestedMax = isMonthly
@@ -545,13 +551,22 @@ function CurrencyField({
       <div className="currency-input">
         <b>₹</b>
         <input
-          inputMode="numeric"
+          inputMode="decimal"
           maxLength={24}
-          value={value ? digits.format(numberValue(value)) : ""}
-          onChange={(event) => onChange(rawNumber(event.target.value))}
-          placeholder="0"
+          value={typed ?? (value ? digits.format(numberValue(value)) : "")}
+          data-invalid-money={moneyError ? "true" : undefined}
+          onBlur={() => { if (!moneyError) setTyped(null); }}
+          onChange={(event) => {
+            const text = event.target.value;
+            setTyped(text);
+            const amount = text.replaceAll(",", "");
+            if (amount === "" || (/^(?:[0-9]+(?:\.[0-9]{0,2})?|\.[0-9]{1,2})$/.test(amount) && Number(amount) <= Number.MAX_SAFE_INTEGER)) {
+              setMoneyError(""); setTyped(amount.includes(".") ? text : amount ? digits.format(Number(amount)) : ""); onChange(amount);
+            } else setMoneyError("Enter a non-negative rupee amount, with up to two decimal places. Words, currency symbols and scientific notation are not accepted.");
+          }}
+          placeholder="Not provided"
           aria-required={required}
-          aria-invalid={invalid || undefined}
+          aria-invalid={invalid || Boolean(moneyError) || undefined}
         />
       </div>
       <input
@@ -562,14 +577,17 @@ function CurrencyField({
         step="1"
         value={sliderPosition}
         onChange={(event) =>
-          onChange(String(amountAtSliderPosition(numberValue(event.target.value))))
+          (setTyped(null), setMoneyError(""), onChange(String(amountAtSliderPosition(numberValue(event.target.value)))))
         }
         aria-label={`Adjust ${label}`}
         aria-valuemin={0}
         aria-valuemax={sliderMaxValue}
         aria-valuenow={numericValue}
-        aria-valuetext={money.format(numericValue)}
+        aria-valuetext={status ? formatFinancial(status) : value.trim() ? money.format(numericValue) : "Not provided"}
       />
+      {moneyError && <small className="field-error" role="alert">{moneyError}</small>}
+      {status?.status === "ESTIMATED" && <small>Estimate</small>}
+      {status?.status === "UNKNOWN" && value.trim() && <small>Not provided — this saved value is marked unknown.</small>}
       {note && <small>{note}</small>}
       {invalid && errorMessage && (
         <small className="field-error" role="alert">{errorMessage}</small>
@@ -616,206 +634,39 @@ function Metric({
   question?: string;
   featured?: boolean;
 }) {
+  const unsupported = (text?:string) => !text || /Not provided|Not available|NaN|Infinity/.test(text);
+  const supported = !unsupported(value);
   return (
     <article className={featured ? "metric featured" : "metric"}>
       <span>{label}</span>
       <div className="metric-value">
-        {context ? <small className="metric-context">{context}</small> : null}
+        {supported && !unsupported(context) ? <small className="metric-context">{context}</small> : null}
         <strong>{value}</strong>
-        {detail ? <small className="metric-insight">{detail}</small> : null}
-        {note ? <small className="metric-accuracy-note">{note}</small> : null}
-        {question ? <small className="metric-question">{question}</small> : null}
+        {supported && !unsupported(detail) ? <small className="metric-insight">{detail}</small> : null}
+        {supported && !unsupported(note) ? <small className="metric-accuracy-note">{note}</small> : null}
+        {supported && !unsupported(question) ? <small className="metric-question">{question}</small> : null}
       </div>
     </article>
   );
 }
 
-function LiveNetworthPreview({
-  totalAssets,
-  totalLiabilities,
-  networth,
-}: {
-  totalAssets: number;
-  totalLiabilities: number;
-  networth: number;
-}) {
-  return (
-    <section className="live-networth-preview" aria-label="Live net worth estimate">
-      <div className="live-networth-primary">
-        <span>Live net worth estimate</span>
-        <output>{money.format(networth)}</output>
-      </div>
-      <div className="live-networth-equation" aria-label="Assets minus liabilities">
-        <span>
-          Assets <output>{money.format(totalAssets)}</output>
-        </span>
-        <i>−</i>
-        <span>
-          Liabilities <output>{money.format(totalLiabilities)}</output>
-        </span>
-      </div>
-    </section>
-  );
+function LiveNetworthPreview({ states }: { states: ReturnType<typeof assessedMap>["status"]["metrics"] }) {
+  return <section className="live-networth-preview" aria-label="Live net worth estimate">
+    <div className="live-networth-primary"><span>{states.networth.value === null ? "Net worth incomplete" : "Live net worth estimate"}</span><output>{formatFinancial(states.networth)}</output></div>
+    <div className="live-networth-equation" aria-label="Assets minus liabilities"><span>Assets <output>{formatFinancial(states.assets)}</output></span><i>−</i><span>Liabilities <output>{formatFinancial(states.liabilities)}</output></span></div>
+    {states.networth.value === null && <p>Complete Assets and Liabilities before calculating your net worth.</p>}
+  </section>;
+}
+function MissingFinancialPicture({status,metrics,onSection}: {status: ReturnType<typeof assessedMap>["status"];metrics:ReturnType<typeof supportedMapMetrics>;onSection:(step:number)=>void}) {
+ const sections=[...new Set(status.missing.map(missingMapSection))];
+ const steps:Record<string,number>={"Personal Profiling":1,Assets:2,Liabilities:3,Spending:4,Investing:5};
+ return <section className="live-strip financial-incomplete" aria-label="Incomplete financial picture"><h1>Your financial picture is incomplete</h1><p>Unknown amounts are not zero. Calculations and conclusions that need missing information are unavailable.</p>
+ <p>Complete these MAP sections: {sections.join(", ")}.</p><div>{sections.map(name=><button key={name} className="text-button" onClick={()=>onSection(steps[name]??1)}>Complete {name}</button>)}</div>
+ <dl>{metrics.map(m=><div key={m.key}><dt>{m.label}</dt><dd>{formatFinancial({status:m.status,value:m.value,missing:[]})}</dd></div>)}</dl></section>;
 }
 
-export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, startAtBlueprint = false }: { startAtBlueprint?: boolean; onDraftStatus?: (dirty: boolean) => void; onDelete?: () => void; memory?: import("../../shared/map-schema").MapMemory | null; onChange: (data: AssessmentData, step: number) => void }) {
-  const {
-    track,
-    submitFeedback,
-    markMapCompleted,
-    submitCompletedMapEmail,
-  } = useProductInsights();
-  const [step, setStep] = useState(memory?.step || (startAtBlueprint ? 1 : 0));
-  const [showQuickStart, setShowQuickStart] = useState(startAtBlueprint);
-  const [data, setData] = useState<AssessmentData>(() => assessmentFromMemory(memory));
-  const draftStatus=useRef(onDraftStatus);draftStatus.current=onDraftStatus;
-  const received = useRef(JSON.stringify(memory));
-  const lastSent = useRef<import("../../shared/map-schema").MapMemory | null>(null);
-  const stable = (value: unknown): unknown => Array.isArray(value) ? value.map(stable) : value && typeof value === "object" ? Object.fromEntries(Object.entries(value).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>[k,stable(v)])) : value;
-  const published = useRef(JSON.stringify({data,step}));
-  const publishRef = useRef(onChange); publishRef.current=onChange;
-  const [error, setError] = useState("");
-  const [invalidFields, setInvalidFields] = useState<string[]>([]);
-  const [recovery, setRecovery] = useState<SavedAssessment | null>(null);
-  const [storageWarning, setStorageWarning] = useState("");
-  const [copyStatus, setCopyStatus] = useState("");
-  const [completionEventId, setCompletionEventId] =
-    useState<Id<"productInsightEvents"> | null>(null);
-  const [emailCaptureDismissed, setEmailCaptureDismissed] = useState(false);
-  const [emailAddress, setEmailAddress] = useState("");
-  const [emailConsent, setEmailConsent] = useState(false);
-  const [emailStatus, setEmailStatus] = useState("");
-  const [emailSubmitting, setEmailSubmitting] = useState(false);
-  const [showAssetAddMenu, setShowAssetAddMenu] = useState(false);
-  const [showLiabilityAddMenu, setShowLiabilityAddMenu] = useState(false);
-  const [returnToFinancialPlan, setReturnToFinancialPlan] = useState(false);
-  const [feedbackCategory, setFeedbackCategory] =
-    useState<FeedbackCategory>("confusing");
-  const [feedbackMessage, setFeedbackMessage] = useState("");
-  const [feedbackStatus, setFeedbackStatus] = useState("");
-  const [clarityRating, setClarityRating] = useState<ClarityRating | "">("");
-  const firstProfileOptionRef = useRef<HTMLButtonElement>(null);
-  const recoveryContinueRef = useRef<HTMLButtonElement>(null);
-  const feedbackDialogRef = useRef<HTMLDialogElement>(null);
-  const blueprint = useMemo(() => calculateMap(data), [data]);
-  const mapRecommendations = [
-    ...blueprint.actionAssessments.map((assessment) => ({
-      id: `action-${assessment.id}`,
-      category: actionCategoryLabels[assessment.category],
-      title: assessment.action,
-      observation: assessment.evidence,
-      action: assessment.nextStep,
-      reason: assessment.perspective,
-    })),
-    ...blueprint.unaddressedFindings.map((finding) => ({
-      id: `finding-${finding.id}`,
-      category: finding.category,
-      title: finding.title,
-      observation: finding.observation,
-      action: finding.action,
-      reason: finding.reason,
-    })),
-  ];
-  const unclassifiedAssetCount = data.assets.filter(
-    (asset) => !asset.purpose,
-  ).length;
-  const debtRepaymentWasSubtracted =
-    blueprint.annualDebtRepaymentDeducted > 0;
-  const debtRepaymentAlreadyCounted =
-    data.liabilities.length > 0 &&
-    data.liabilities.every(
-      (liability) => liability.repaymentIncludedInNeeds === true,
-    );
-  const showDebtRepaymentStatus =
-    debtRepaymentAlreadyCounted ||
-    blueprint.annualDebtRepaymentDeducted > 0;
-  const surplusLabel = debtRepaymentWasSubtracted
-    ? "Estimated Surplus After Debt Repayment"
-    : "Available Cash";
-  const enteredLifestyleChange = data.lifestyleChanges.reduce(
-    (sum, change) =>
-      sum +
-      (change.direction === "decrease" ? -1 : 1) *
-        numberValue(change.monthlyAmount),
-    0,
-  );
-  const visionBaselineChange =
-    data.visionLevel === "security" ? -numberValue(data.monthlyWants) : 0;
-  const totalLifestyleChange = visionBaselineChange + enteredLifestyleChange;
-  const prioritizedWealthGoals = data.wealthGoals
-    .map((goal, index) => ({ goal, index }))
-    .sort(
-      (a, b) =>
-        goalPriorityRank[data.wealthGoalDetails[a.goal]?.priority ?? ""] -
-          goalPriorityRank[data.wealthGoalDetails[b.goal]?.priority ?? ""] ||
-        a.index - b.index,
-    )
-    .map(({ goal }) => goal);
-  const primaryGoal = prioritizedWealthGoals[0];
-  const primaryGoalStatement = primaryGoal
-    ? data.wealthGoalDetails[primaryGoal]?.description ||
-      wealthGoalLabels[primaryGoal]
-    : "Your selected life goals";
-  const visionLabel = data.visionLevel
-    ? data.visionLevel[0].toUpperCase() + data.visionLevel.slice(1)
-    : "Vision not yet defined";
-
-  useEffect(() => {
-    const signature=JSON.stringify(memory);
-    if(signature!==received.current){
-      received.current=signature;
-      const next=assessmentFromMemory(memory);const nextStep=memory?.step || (startAtBlueprint ? 1 : 0);
-      if (lastSent.current && nextStep === lastSent.current.step && JSON.stringify(stable(next)) === JSON.stringify(stable(assessmentFromMemory(lastSent.current)))) return;
-      published.current=JSON.stringify({data:next,step:nextStep});
-      setData(next);setStep(nextStep);
-    }
-  },[memory]);
-  useEffect(()=>{
-    const signature=JSON.stringify({data,step});
-    if(signature===published.current){draftStatus.current?.(false);return;}
-    draftStatus.current?.(true);
-    const timeout=setTimeout(()=>{ published.current=signature;try {lastSent.current=memoryFromAssessment(data,memory,step);} catch {lastSent.current=null;}publishRef.current(data,step);draftStatus.current?.(false); },500);
-    return ()=>clearTimeout(timeout);
-  },[data,step]);
-  useEffect(() => {
-    if (recovery) queueMicrotask(() => recoveryContinueRef.current?.focus());
-  }, [recovery]);
-  useEffect(() => {
-    track("step_viewed", { step });
-  }, [step, track]);
-  useEffect(() => {
-    if (step !== 11 || completionEventId) return;
-    void markMapCompleted()
-      .then(setCompletionEventId)
-      .catch(() => {
-        // Optional email capture must never interrupt the completed MAP.
-      });
-  }, [completionEventId, markMapCompleted, step]);
-
-  const patchData = (patch: Partial<AssessmentData>) =>
-    setData((current) => ({ ...current, ...patch }));
-  const isInvalid = (key: string, condition = true) =>
-    condition && invalidFields.includes(key);
-  const go = (next: number) => {
-    setError("");
-    setInvalidFields([]);
-    setStep(next);
-    document.querySelector(".original-map-scroll")?.scrollTo({
-      top: 0,
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "auto"
-        : "smooth",
-    });
-  };
-  const editFromFinancialPlan = (next: number) => {
-    setReturnToFinancialPlan(true);
-    go(next);
-  };
-  const returnToPlan = () => {
-    setReturnToFinancialPlan(false);
-    go(6);
-  };
-  const validateAndContinue = () => {
+// A stored next-step index is not proof that the required profile was supplied.
+export function assessmentStepValidation(data: AssessmentData, step: number) {
     let message = "";
     const fields: string[] = [];
     if (step === 1) {
@@ -833,7 +684,8 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
     }
     if (step === 2) {
       for (const item of data.assets) {
-        if (!isMoneyValue(item.value)) fields.push(`asset-${item.id}-value`);
+        if (!isMoneyValue(item.value, true)) fields.push(`asset-${item.id}-value`);
+        if (!item.purpose) fields.push(`asset-${item.id}-purpose`);
         if (item.annualNetIncome && !isMoneyValue(item.annualNetIncome, true))
           fields.push(`asset-${item.id}-income`);
       }
@@ -843,7 +695,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
       if (!data.liabilities.length && !data.hasNoLiabilitiesConfirmed)
         fields.push("liabilities");
       for (const item of data.liabilities) {
-        if (!isMoneyValue(item.value)) fields.push(`liability-${item.id}-value`);
+        if (!isMoneyValue(item.value, true)) fields.push(`liability-${item.id}-value`);
         if (item.interestRate && (!Number.isFinite(Number(item.interestRate)) || Number(item.interestRate) < 0 || Number(item.interestRate) > 100))
           fields.push(`liability-${item.id}-interest`);
       }
@@ -852,9 +704,9 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
         : "Add a liability or confirm that you currently have none.";
     }
     if (step === 4) {
-      if (!isMoneyValue(data.monthlyNeeds)) fields.push("monthly-needs");
+      if (!isMoneyValue(data.monthlyNeeds, true)) fields.push("monthly-needs");
       if (!isMoneyValue(data.monthlyWants, true)) fields.push("monthly-wants");
-      if (fields.length) message = "Enter monthly Needs and Wants. Enter ₹0 when there is no Wants spending.";
+      if (fields.length) message = "Enter monthly Needs and Wants. Enter ₹0 only when you confirm there is no spending.";
     }
     if (step === 5 && !isMoneyValue(data.annualInvesting, true)) {
       fields.push("annual-investing");
@@ -919,6 +771,195 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
       if (fields.length && data.proposedActions.length)
         message = "Complete the highlighted fields for every action, or remove the unfinished action.";
     }
+    return { message, fields };
+}
+
+const completionSections = ["", "earn", "own", "owe", "spend", "invest", "blueprint", "lifestyle", "goals", "milestone", "reflect"] as const;
+
+export function completedAssessmentSteps(memory: import("../../shared/map-schema").MapMemory | null | undefined, data = assessmentFromMemory(memory)) {
+  const requiredPaths: Record<number, string[]> = {
+    1: ["userType", "grossPersonalIncome", "effectiveTaxRate"],
+    2: data.assets.map(a => `assets.${a.id}.value`),
+    3: data.liabilities.map(l => `liabilities.${l.id}.value`),
+    4: ["monthlyNeeds", "monthlyWants"], 5: ["annualInvesting"],
+    7: ["visionLevel", ...(data.visionLevel === "freedom" ? ["desiredLifestyleMonthly"] : []), ...data.lifestyleChanges.flatMap(l => [`lifestyleChanges.${l.id}.monthlyAmount`, `lifestyleChanges.${l.id}.startDate`])],
+    8: data.wealthGoals.map(g => `wealthGoalDetails.${g}.amount`),
+    9: data.wealthMilestoneChoice === "yes" ? ["targetNetworth", "targetYear"] : [],
+    10: data.proposedActions.flatMap(a => [`proposedActions.${a.id}.category`, `proposedActions.${a.id}.description`]),
+  };
+  const completed = completionSections.map((section, index) => index > 0 &&
+    (memory?.covered.includes(section as Exclude<typeof section, "">) || (memory?.step ?? 0) > index) &&
+    !memory?.unknowns.includes(section) &&
+    !(requiredPaths[index] ?? []).some(path => memory?.unknowns.some(unknown => unknown === path || path.startsWith(unknown + "."))) &&
+    !assessmentStepValidation(data, index).message);
+  completed[6] = completed[6] && completed.slice(1, 6).every(Boolean);
+  return completed;
+}
+
+function resumeAssessmentStep(memory: import("../../shared/map-schema").MapMemory | null | undefined, startAtBlueprint: boolean) {
+  if (memory && memory.step > 1 && assessmentStepValidation(assessmentFromMemory(memory), 1).message) return 1;
+  return memory?.step || (startAtBlueprint ? 1 : 0);
+}
+
+export function NetworthAssessment({ allowEmailContact = true, memory, onChange, onDelete, onDraftStatus, startAtBlueprint = false, financialReview, additionalSteps, showContent = true, onNavigate }: { allowEmailContact?: boolean; financialReview?: React.ReactNode; additionalSteps?: React.ReactNode; showContent?: boolean; onNavigate?: () => void; startAtBlueprint?: boolean; onDraftStatus?: (dirty: boolean) => void; onDelete?: () => void; memory?: import("../../shared/map-schema").MapMemory | null; onChange: (data: AssessmentData, step: number) => void }) {
+  const {
+    track,
+    submitFeedback,
+    markMapCompleted,
+    submitCompletedMapEmail,
+  } = useProductInsights();
+  const [step, setStep] = useState(() => resumeAssessmentStep(memory, startAtBlueprint));
+  const [showQuickStart, setShowQuickStart] = useState(startAtBlueprint && !memory?.data.userType);
+  const [data, setData] = useState<AssessmentData>(() => assessmentFromMemory(memory));
+  const draftStatus=useRef(onDraftStatus);draftStatus.current=onDraftStatus;
+  const received = useRef(JSON.stringify(memory));
+  const lastSent = useRef<import("../../shared/map-schema").MapMemory | null>(null);
+  const stable = (value: unknown): unknown => Array.isArray(value) ? value.map(stable) : value && typeof value === "object" ? Object.fromEntries(Object.entries(value).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>[k,stable(v)])) : value;
+  const published = useRef(JSON.stringify({data,step}));
+  const publishRef = useRef(onChange); publishRef.current=onChange;
+  const [error, setError] = useState("");
+  const [invalidFields, setInvalidFields] = useState<string[]>([]);
+  const [recovery, setRecovery] = useState<SavedAssessment | null>(null);
+  const [storageWarning, setStorageWarning] = useState("");
+  const [copyStatus, setCopyStatus] = useState("");
+  const [completionEventId, setCompletionEventId] =
+    useState<Id<"productInsightEvents"> | null>(null);
+  const [emailCaptureDismissed, setEmailCaptureDismissed] = useState(false);
+  const [emailAddress, setEmailAddress] = useState("");
+  const [emailConsent, setEmailConsent] = useState(false);
+  const [emailStatus, setEmailStatus] = useState("");
+  const [emailSubmitting, setEmailSubmitting] = useState(false);
+  const [showAssetAddMenu, setShowAssetAddMenu] = useState(false);
+  const [showLiabilityAddMenu, setShowLiabilityAddMenu] = useState(false);
+  const [returnToFinancialPlan, setReturnToFinancialPlan] = useState(false);
+  const [feedbackCategory, setFeedbackCategory] =
+    useState<FeedbackCategory>("confusing");
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackStatus, setFeedbackStatus] = useState("");
+  const [clarityRating, setClarityRating] = useState<ClarityRating | "">("");
+  const firstProfileOptionRef = useRef<HTMLButtonElement>(null);
+  const recoveryContinueRef = useRef<HTMLButtonElement>(null);
+  const feedbackDialogRef = useRef<HTMLDialogElement>(null);
+  const draftMemory = useMemo(() => memoryFromAssessment(data, memory, step), [data, memory, step]);
+  const { blueprint, status: financial, values: financialValues } = useMemo(() => assessedMap(draftMemory), [draftMemory]);
+  const formatBlueprint = (key:string, transform:(value:number)=>number = value=>value) => {const state=financialValues[key];return formatFinancial({...state,value:state.value===null?null:transform(state.value)});};
+  const formatBlueprintPercent = (key:string) => {const state=financialValues[key];return state.value===null?(key==="assetIncomeYield" && financial.metrics.assets.value!==null && financial.metrics.assetincome.value!==null && blueprint.incomeGeneratingAssets===0 ? "Not applicable — no income-producing assets" : "Not provided"):metricPercent(state.value)+(state.status==="ESTIMATED"?" (estimate)":"");};
+  const hasFinancialEstimates = Object.values(financialValues).some(v=>v.status==="ESTIMATED");
+  const mapRecommendations = recommendationsForMap(blueprint);
+  const unclassifiedAssetCount = data.assets.filter(
+    (asset) => !asset.purpose,
+  ).length;
+  const debtRepaymentWasSubtracted =
+    blueprint.annualDebtRepaymentDeducted > 0;
+  const debtRepaymentAlreadyCounted =
+    data.liabilities.length > 0 &&
+    data.liabilities.every(
+      (liability) => liability.repaymentIncludedInNeeds === true,
+    );
+  const showDebtRepaymentStatus =
+    debtRepaymentAlreadyCounted ||
+    blueprint.annualDebtRepaymentDeducted > 0;
+  const surplusLabel = debtRepaymentWasSubtracted
+    ? "Estimated Surplus After Debt Repayment"
+    : "Available Cash";
+  const enteredLifestyleChange = data.lifestyleChanges.reduce(
+    (sum, change) =>
+      sum +
+      (change.direction === "decrease" ? -1 : 1) *
+        numberValue(change.monthlyAmount),
+    0,
+  );
+  const visionBaselineChange =
+    data.visionLevel === "security" ? -numberValue(data.monthlyWants) : 0;
+  const totalLifestyleChange = visionBaselineChange + enteredLifestyleChange;
+  const prioritizedWealthGoals = data.wealthGoals
+    .map((goal, index) => ({ goal, index }))
+    .sort(
+      (a, b) =>
+        goalPriorityRank[data.wealthGoalDetails[a.goal]?.priority ?? ""] -
+          goalPriorityRank[data.wealthGoalDetails[b.goal]?.priority ?? ""] ||
+        a.index - b.index,
+    )
+    .map(({ goal }) => goal);
+  const primaryGoal = prioritizedWealthGoals[0];
+  const primaryGoalStatement = primaryGoal
+    ? data.wealthGoalDetails[primaryGoal]?.description ||
+      wealthGoalLabels[primaryGoal]
+    : "Your selected life goals";
+  const visionLabel = data.visionLevel
+    ? data.visionLevel[0].toUpperCase() + data.visionLevel.slice(1)
+    : "Vision not yet defined";
+
+  useEffect(() => {
+    const signature=JSON.stringify(memory);
+    if(signature!==received.current){
+      received.current=signature;
+      const next=assessmentFromMemory(memory);const nextStep=resumeAssessmentStep(memory, startAtBlueprint);
+      if (lastSent.current && nextStep === lastSent.current.step && JSON.stringify(stable(next)) === JSON.stringify(stable(assessmentFromMemory(lastSent.current)))) return;
+      published.current=JSON.stringify({data:next,step:nextStep});
+      setData(next);setStep(nextStep);
+    }
+  },[memory]);
+  useEffect(()=>{
+    const signature=JSON.stringify({data,step});
+    if(signature===published.current){draftStatus.current?.(false);return;}
+    draftStatus.current?.(true);
+    const timeout=setTimeout(()=>{ published.current=signature;try {lastSent.current=memoryFromAssessment(data,memory,step);} catch {lastSent.current=null;}publishRef.current(data,step);draftStatus.current?.(false); },500);
+    return ()=>clearTimeout(timeout);
+  },[data,step]);
+  useEffect(() => {
+    if (recovery) queueMicrotask(() => recoveryContinueRef.current?.focus());
+  }, [recovery]);
+  useEffect(() => {
+    track("step_viewed", { step });
+  }, [step, track]);
+  useEffect(() => {
+    // The generated screen appears before its debounced save commits.
+    // Only resolve the completion identifier after the saved MAP acknowledges step 11.
+    if (step !== 11 || memory?.step !== 11 || completionEventId) return;
+    void markMapCompleted()
+      .then(setCompletionEventId)
+      .catch(() => {
+        // Optional email capture must never interrupt the completed MAP.
+      });
+  }, [completionEventId, markMapCompleted, step, memory?.step]);
+
+  useEffect(() => {
+    const row = document.querySelector<HTMLElement>(".assessment-steps");
+    const active = row?.querySelector<HTMLElement>("[aria-current='step']");
+    if (!row || !active) return;
+    const left = active.getBoundingClientRect().left - row.getBoundingClientRect().left + row.scrollLeft - (row.clientWidth - active.clientWidth) / 2;
+    row.scrollTo?.({ left: Math.max(0, left), behavior: "auto" });
+  }, [step, showContent]);
+
+  const patchData = (patch: Partial<AssessmentData>) =>
+    setData((current) => ({ ...current, ...patch }));
+  const isInvalid = (key: string, condition = true) =>
+    condition && invalidFields.includes(key);
+  const go = (next: number) => {
+    onNavigate?.();
+    setError("");
+    setInvalidFields([]);
+    setStep(next);
+    document.querySelector(".original-map-scroll")?.scrollTo({
+      top: 0,
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+    });
+  };
+  const editFromFinancialPlan = (next: number) => {
+    setReturnToFinancialPlan(true);
+    go(next);
+  };
+  const returnToPlan = () => {
+    setReturnToFinancialPlan(false);
+    go(6);
+  };
+  const validateAndContinue = () => {
+    const invalidMoney = document.querySelector<HTMLInputElement>("[data-invalid-money='true']");
+    if (invalidMoney) { setError("Correct the highlighted rupee amount before continuing. Your last valid amount has not changed."); invalidMoney.focus(); return; }
+    const { message, fields } = assessmentStepValidation(data, step);
     if (message) {
       setError(message);
       setInvalidFields(fields);
@@ -937,7 +978,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
         }
         const first = document.querySelector<HTMLElement>("[aria-invalid='true'], [data-invalid='true']");
         first?.scrollIntoView({ behavior: "smooth", block: "center" });
-        first?.focus({ preventScroll: true });
+        (first?.querySelector<HTMLElement>("button, input, select, textarea") ?? first)?.focus({ preventScroll: true });
       });
       return;
     }
@@ -972,7 +1013,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
           type,
           value: "",
           interestRate: "",
-          annualRepayment: "0",
+          annualRepayment: "",
           repaymentIncludedInNeeds: false,
           classification: type === "business" ? "business" : "personal",
         },
@@ -1187,6 +1228,8 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
       setClarityRating("");
     }
   };
+  const completedSteps = completedAssessmentSteps(memory, data);
+  const reviewReady = completedSteps.slice(1, 10).every(Boolean) && !assessmentStepValidation(data, 10).message;
   const progress = step > 0 && step < 11 ? Math.round((step / 10) * 100) : 0;
 
   return (
@@ -1216,41 +1259,65 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
           </button>
         </div>
       </nav>
+      {step > 0 && (
+        <nav className="assessment-steps" aria-label={additionalSteps ? "Your 12 steps" : "Your 10 MAP steps"}>
+          <ol>
+            {stepNames.slice(1, 11).map((name, offset) => {
+              const target = offset + 1;
+              const completed = completedSteps[target];
+              const available = target <= step || completedSteps.slice(1, target).every(Boolean);
+              return <li key={name}>
+                <button type="button" disabled={!available}
+                  aria-current={showContent && (step === target || (step === 11 && target === 10)) ? "step" : undefined}
+                  aria-label={`Step ${target}: ${name}${completed ? ", completed" : ""}`}
+                  className={completed ? "step-completed" : ""}
+                  onClick={() => { setReturnToFinancialPlan(false); go(target); }}>
+                  <span className="step-marker" aria-hidden="true">{completed ?
+                    <svg viewBox="0 0 20 20" fill="none"><path d="m4 10 4 4 8-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg> : target}</span>
+                  <span>{stepNavigationLabels[target]}</span>
+                </button>
+              </li>;
+            })}
+            {additionalSteps}
+          </ol>
+        </nav>
+      )}
       {storageWarning && (
         <p className="storage-warning storage-global" role="status">
           {storageWarning}
         </p>
       )}
-      {step > 0 && step < 11 && (
+      {showContent && (step === 6 || step === 11) && !financial.ready && <MissingFinancialPicture status={financial} metrics={supportedMapMetrics(draftMemory)} onSection={go} />}
+      {showContent && step > 0 && step < 11 && (
         <div
           className="progress"
           role="progressbar"
           aria-label="Assessment progress"
           aria-valuemin={1}
-          aria-valuemax={10}
+          aria-valuemax={additionalSteps ? 12 : 10}
           aria-valuenow={step}
-          aria-valuetext={`${stepNames[step]}, step ${step} of 10`}
+          aria-valuetext={`${stepNames[step]}, step ${step} of ${additionalSteps ? 12 : 10}`}
         >
           <div>
             <span>{stepNames[step]}</span>
-            <small>Step {step} of 10</small>
+            <small>Step {step} of {additionalSteps ? 12 : 10}</small>
           </div>
           <i style={{ width: `${progress}%` }} />
         </div>
       )}
 
-      {step === 0 && (
+      {showContent && step === 0 && (
         <NetworthWelcome onBuild={() => setShowQuickStart(true)} />
       )}
 
-      {step > 0 && step < 11 && (
+      {showContent && step > 0 && step < 11 && (
         <section className={`wizard stage-enter step-${step}`}>
           {step === 1 && (
             <>
               <PageHeading
                 number="01"
                 eyebrow="Blueprint · Earn"
-                title="What income do you take home?"
+                title="What is your income before tax?"
                 copy="Enter the personal income you receive before tax. If you own a business, include salary, drawings, dividends and other regular withdrawals—but not business revenue."
               />
               <div className="choice-instruction" id="profile-choice-instruction">
@@ -1332,9 +1399,10 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                   label={
                     data.userType === "business-owner" ||
                     data.userType === "founder"
-                      ? "Annual Personal Income From Your Business"
+                      ? "Annual Personal Income From Your Business Before Tax"
                       : "Annual Income Before Tax"
                   }
+                  status={financial.inputs.grossPersonalIncome}
                   value={data.grossPersonalIncome}
                   onChange={(grossPersonalIncome) =>
                     patchData({ grossPersonalIncome })
@@ -1373,14 +1441,17 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                     value={data.effectiveTaxRate || "0"}
                     onChange={(event) => patchData({ effectiveTaxRate: event.target.value })}
                     aria-label="Adjust effective personal tax rate"
+                    aria-valuetext={financial.inputs.effectiveTaxRate.value===null?"Not provided":`${financial.inputs.effectiveTaxRate.value}%${financial.inputs.effectiveTaxRate.status==="ESTIMATED"?" (estimate)":""}`}
                   />
                   <small>A best estimate is sufficient.</small>
+                  {financial.inputs.effectiveTaxRate.status === "ESTIMATED" && <small>Estimate</small>}
+                  {financial.inputs.effectiveTaxRate.status === "UNKNOWN" && <small>Not provided</small>}
                   {isInvalid("tax", data.effectiveTaxRate === "" || numberValue(data.effectiveTaxRate) < 0 || numberValue(data.effectiveTaxRate) > 100) && <small className="field-error" role="alert">Enter a rate from 0% to 100%.</small>}
                 </label>
               </div>
               <div className="live-strip">
                 <span>Estimated annual income after tax</span>
-                <strong>{money.format(blueprint.takeHomeIncome)}</strong>
+                <strong>{formatBlueprint("takeHomeIncome")}</strong>
                 <small>Based on the income and tax rate you entered</small>
               </div>
             </>
@@ -1395,9 +1466,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                 copy="Add your meaningful assets using approximate current values. Include annual income only when an asset currently generates income."
               />
               <LiveNetworthPreview
-                totalAssets={blueprint.totalAssets}
-                totalLiabilities={blueprint.totalLiabilities}
-                networth={blueprint.networth}
+                states={financial.metrics}
               />
               <p className="add-menu-instruction">
                 Choose a category to add an asset
@@ -1417,7 +1486,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
               </div>
               <div className="entry-list">
                 {data.assets.map((asset, index) => (
-                  <article className={`entry-card asset-entry${isInvalid(`asset-${asset.id}-value`, !isMoneyValue(asset.value)) ? " has-errors" : ""}`} key={asset.id}>
+                  <article className={`entry-card asset-entry${isInvalid(`asset-${asset.id}-value`, !isMoneyValue(asset.value, true)) ? " has-errors" : ""}`} key={asset.id}>
                     <div className="entry-index">
                       {String(index + 1).padStart(2, "0")}
                     </div>
@@ -1457,13 +1526,15 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                       </label>
                       <CurrencyField
                         label="Current Value"
+                        status={financial.inputs[`assets.${asset.id}.value`]}
                         value={asset.value}
                         onChange={(value) => updateAsset(asset.id, { value })}
-                        invalid={isInvalid(`asset-${asset.id}-value`, !isMoneyValue(asset.value))}
+                        invalid={isInvalid(`asset-${asset.id}-value`, !isMoneyValue(asset.value, true))}
                         errorMessage="Enter the current value."
                       />
                       <CurrencyField
                         label="Annual Income (if any)"
+                        status={financial.inputs[`assets.${asset.id}.annualNetIncome`]}
                         value={asset.annualNetIncome ?? ""}
                         onChange={(annualNetIncome) =>
                           updateAsset(asset.id, { annualNetIncome })
@@ -1475,18 +1546,20 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                       <div className="yield-field">
                         <span>Yield</span>
                         <output>
-                          {numberValue(asset.value) > 0
+                          {financial.inputs[`assets.${asset.id}.value`]?.value !== null && financial.inputs[`assets.${asset.id}.annualNetIncome`]?.value !== null && numberValue(asset.value) > 0
                             ? `${(
                                 (numberValue(asset.annualNetIncome ?? "") /
                                   numberValue(asset.value)) *
                                 100
-                              ).toFixed(1)}%`
-                            : "—"}
+                              ).toFixed(1)}%${[financial.inputs[`assets.${asset.id}.value`],financial.inputs[`assets.${asset.id}.annualNetIncome`]].some(v=>v?.status === "ESTIMATED") ? " (estimate)" : ""}`
+                            : "Not provided"}
                         </output>
                       </div>
                     </div>
                     <div
-                      className="purpose"
+                      className={`purpose${!asset.purpose ? " invalid" : ""}`}
+                      aria-invalid={!asset.purpose || undefined}
+                      aria-describedby={!asset.purpose ? `asset-purpose-error-${asset.id}` : undefined}
                       role="group"
                       aria-labelledby={`asset-purpose-${asset.id}`}
                     >
@@ -1494,7 +1567,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                         className="choice-instruction"
                         id={`asset-purpose-${asset.id}`}
                       >
-                        <span>Primary Use</span>
+                        <span>Primary Use (required)</span>
                       </span>
                       <button
                         className={asset.purpose === "investment" ? "selected" : ""}
@@ -1522,6 +1595,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                       >
                         Personal / Lifestyle
                       </button>
+                      {!asset.purpose && <small className="field-error" id={`asset-purpose-error-${asset.id}`} role="alert">Choose Investments or Personal / Lifestyle for this asset to complete your MAP.</small>}
                     </div>
                     <button
                       className="remove"
@@ -1587,7 +1661,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
               )}
               <div className="running-total">
                 <span>Total assets</span>
-                <strong>{money.format(blueprint.totalAssets)}</strong>
+                <strong>{formatBlueprint("totalAssets")}</strong>
               </div>
             </>
           )}
@@ -1601,9 +1675,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                 copy="Add the amount currently outstanding on each liability. Include a business liability only when you are personally responsible for repaying it."
               />
               <LiveNetworthPreview
-                totalAssets={blueprint.totalAssets}
-                totalLiabilities={blueprint.totalLiabilities}
-                networth={blueprint.networth}
+                states={financial.metrics}
               />
               <p className="add-menu-instruction">
                 Choose a liability type to add a debt
@@ -1622,12 +1694,12 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                 )}
               </div>
               <p className="step-field-guidance">
-                Add each debt above, or confirm below that you have no outstanding liabilities. Outstanding Amount is required; Description is optional, and Interest Rate and Annual Repayment may remain at zero.
+                Add each debt above, or confirm below that you have no outstanding liabilities. Outstanding Amount is required; Description is optional, and Leave Interest Rate or Annual Repayment blank if unknown; enter zero only when confirmed.
               </p>
               <div className="entry-list">
                 {data.liabilities.map((liability, index) => (
                   <article
-                    className={`entry-card liability liability-entry${isInvalid(`liability-${liability.id}-value`, !isMoneyValue(liability.value)) || isInvalid(`liability-${liability.id}-interest`, Boolean(liability.interestRate) && (numberValue(liability.interestRate ?? "") < 0 || numberValue(liability.interestRate ?? "") > 100)) ? " has-errors" : ""}`}
+                    className={`entry-card liability liability-entry${isInvalid(`liability-${liability.id}-value`, !isMoneyValue(liability.value, true)) || isInvalid(`liability-${liability.id}-interest`, Boolean(liability.interestRate) && (numberValue(liability.interestRate ?? "") < 0 || numberValue(liability.interestRate ?? "") > 100)) ? " has-errors" : ""}`}
                     key={liability.id}
                   >
                     <div className="entry-index">
@@ -1669,11 +1741,12 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                       </label>
                       <CurrencyField
                         label="Outstanding Amount"
+                        status={financial.inputs[`liabilities.${liability.id}.value`]}
                         value={liability.value}
                         onChange={(value) =>
                           updateLiability(liability.id, { value })
                         }
-                        invalid={isInvalid(`liability-${liability.id}-value`, !isMoneyValue(liability.value))}
+                        invalid={isInvalid(`liability-${liability.id}-value`, !isMoneyValue(liability.value, true))}
                         errorMessage="Enter the outstanding amount."
                       />
                       <label className={`field${isInvalid(`liability-${liability.id}-interest`, Boolean(liability.interestRate) && (numberValue(liability.interestRate ?? "") < 0 || numberValue(liability.interestRate ?? "") > 100)) ? " invalid" : ""}`}>
@@ -1688,7 +1761,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                                 interestRate: normalizePercentageInput(event.target.value),
                               })
                             }
-                            placeholder="0"
+                            placeholder="Not provided"
                             aria-label="Annual interest rate percentage"
                             aria-invalid={isInvalid(`liability-${liability.id}-interest`, Boolean(liability.interestRate) && (numberValue(liability.interestRate ?? "") < 0 || numberValue(liability.interestRate ?? "") > 100)) || undefined}
                           />
@@ -1703,25 +1776,22 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                           value={liability.interestRate || "0"}
                           onChange={(event) => updateLiability(liability.id, { interestRate: event.target.value })}
                           aria-label={`Adjust interest rate for ${liability.description || `liability ${index + 1}`}`}
+                          aria-valuetext={financial.inputs[`liabilities.${liability.id}.interestRate`]?.value===null?"Not provided":`${liability.interestRate}%${financial.inputs[`liabilities.${liability.id}.interestRate`]?.status==="ESTIMATED"?" (estimate)":""}`}
                         />
                         {isInvalid(`liability-${liability.id}-interest`, Boolean(liability.interestRate) && (numberValue(liability.interestRate ?? "") < 0 || numberValue(liability.interestRate ?? "") > 100)) && <small className="field-error" role="alert">Enter 0% to 100%, or leave it blank.</small>}
                       </label>
                       <div className="annual-interest-field">
+                        {financial.inputs[`liabilities.${liability.id}.interestRate`]?.status === "ESTIMATED" && <small>Interest rate: estimate</small>}
                         <span>Annual Interest</span>
                         <output>
-                          {liability.interestRate !== undefined &&
-                          liability.interestRate !== "" &&
-                          numberValue(liability.value) > 0
-                            ? money.format(
-                                calculateAnnualInterest(liability),
-                              )
-                            : "—"}
+                          {formatFinancial(combineFinancial([financial.inputs[`liabilities.${liability.id}.value`], financial.inputs[`liabilities.${liability.id}.interestRate`]], ([balance,rate])=>balance*rate/100))}
                         </output>
                       </div>
                       <div className="liability-repayment-field">
                         <CurrencyField
                           label="Annual Repayment"
-                          value={liability.annualRepayment ?? "0"}
+                          status={financial.inputs[`liabilities.${liability.id}.annualRepayment`]}
+                          value={liability.annualRepayment ?? ""}
                           onChange={(annualRepayment) =>
                             updateLiability(liability.id, { annualRepayment })
                           }
@@ -1865,7 +1935,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
               )}
               <div className="running-total">
                 <span>Total liabilities</span>
-                <strong>{money.format(blueprint.totalLiabilities)}</strong>
+                <strong>{formatBlueprint("totalLiabilities")}</strong>
               </div>
             </>
           )}
@@ -1889,9 +1959,10 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                   </p>
                   <CurrencyField
                     label="Average Monthly Needs"
-                    value={data.monthlyNeeds}
+                    status={financial.inputs.monthlyNeeds}
+                  value={data.monthlyNeeds}
                     onChange={(monthlyNeeds) => patchData({ monthlyNeeds })}
-                    invalid={isInvalid("monthly-needs", !isMoneyValue(data.monthlyNeeds))}
+                    invalid={isInvalid("monthly-needs", !isMoneyValue(data.monthlyNeeds, true))}
                     errorMessage="Enter your monthly essential costs."
                   />
                 </article>
@@ -1905,7 +1976,8 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                   </p>
                   <CurrencyField
                     label="Average Monthly Wants"
-                    value={data.monthlyWants}
+                    status={financial.inputs.monthlyWants}
+                  value={data.monthlyWants}
                     onChange={(monthlyWants) => patchData({ monthlyWants })}
                     invalid={isInvalid("monthly-wants", !isMoneyValue(data.monthlyWants, true))}
                     errorMessage="Enter your monthly wants, or ₹0."
@@ -1915,11 +1987,11 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
               <div className="live-strip">
                 <span>Annual lifestyle cost</span>
                 <strong>
-                  {money.format(blueprint.currentLifestyle)} / year
+                  {formatBlueprint("currentLifestyle")} / year
                 </strong>
                 <small>
-                  Needs {money.format(blueprint.annualNeeds)} + Wants{" "}
-                  {money.format(blueprint.annualWants)}
+                  Needs {formatBlueprint("annualNeeds")} + Wants{" "}
+                  {formatBlueprint("annualWants")}
                 </small>
               </div>
             </>
@@ -1936,6 +2008,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
               <div className="focus-field investing-focus-field">
                 <CurrencyField
                   label="Typical Annual Investing"
+                  status={financial.inputs.annualInvesting}
                   value={data.annualInvesting}
                   onChange={(annualInvesting) => patchData({ annualInvesting })}
                   note="Include recurring contributions to investment assets. Enter ₹0 if you are not currently investing."
@@ -1952,12 +2025,12 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
               >
                 <div>
                   <span>Take-home</span>
-                  <strong>{money.format(blueprint.takeHomeIncome)}</strong>
+                  <strong>{formatBlueprint("takeHomeIncome")}</strong>
                 </div>
                 <i>−</i>
                 <div>
                   <span>Lifestyle</span>
-                  <strong>{money.format(blueprint.currentLifestyle)}</strong>
+                  <strong>{formatBlueprint("currentLifestyle")}</strong>
                 </div>
                 {showDebtRepaymentStatus && (
                   <>
@@ -1970,7 +2043,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                       </span>
                       {!debtRepaymentAlreadyCounted && (
                         <strong>
-                          {money.format(blueprint.annualDebtRepaymentDeducted)}
+                          {formatBlueprint("annualDebtRepaymentDeducted")}
                         </strong>
                       )}
                     </div>
@@ -1979,23 +2052,23 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                 <i>=</i>
                 <div>
                   <span>{surplusLabel}</span>
-                  <strong>{money.format(blueprint.availableSurplus)}</strong>
+                  <strong>{formatBlueprint("availableSurplus")}</strong>
                 </div>
                 <i>−</i>
                 <div>
                   <span>Actual investing</span>
-                  <strong>{money.format(blueprint.annualInvesting)}</strong>
+                  <strong>{formatBlueprint("annualInvesting")}</strong>
                 </div>
                 <i>=</i>
                 <div>
                   <span>Liquidity</span>
-                  <strong>{money.format(blueprint.cashAfterInvesting)}</strong>
+                  <strong>{formatBlueprint("cashAfterInvesting")}</strong>
                 </div>
               </div>
             </>
           )}
 
-          {step === 6 && (
+          {step === 6 && financial.ready && (
             <>
               <header className="page-heading">
                 <span>06</span>
@@ -2004,19 +2077,20 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                   <h1>Your financial life, in one place</h1>
                 </div>
               </header>
+              {hasFinancialEstimates && <p role="status">This plan includes estimated entries. Ratios and observations that use them are estimates, not verified exact figures.</p>}
               <div className="blueprint-grid financial-headlines">
                 <Metric
                   label="Current Net Worth"
-                  value={money.format(blueprint.networth)}
+                  value={formatBlueprint("networth")}
                   featured
                 />
                 <Metric
                   label="Total Assets"
-                  value={money.format(blueprint.totalAssets)}
+                  value={formatBlueprint("totalAssets")}
                 />
                 <Metric
                   label="Total Liabilities"
-                  value={money.format(blueprint.totalLiabilities)}
+                  value={formatBlueprint("totalLiabilities")}
                 />
               </div>
               <details
@@ -2037,7 +2111,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                   <div className="networth-summary">
                 <Metric
                   label="Current Net Worth"
-                  value={money.format(blueprint.networth)}
+                  value={formatBlueprint("networth")}
                   detail={
                     blueprint.totalAssets > 0
                       ? `${metricPercent(percentageOf(blueprint.networth, blueprint.totalAssets))} of asset value remains net`
@@ -2058,36 +2132,36 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                 <div>
                   <Metric
                     label="Total Assets"
-                    value={money.format(blueprint.totalAssets)}
+                    value={formatBlueprint("totalAssets")}
                     detail={
                       blueprint.largestAsset
-                        ? `${blueprint.largestAsset.description.trim() || assetCategoryLabels[blueprint.largestAsset.category]} is ${blueprint.largestAssetPercent.toFixed(0)}% of assets`
+                        ? `${blueprint.largestAsset.description.trim() || assetCategoryLabels[blueprint.largestAsset.category]} is ${blueprint.largestAssetPercent.toFixed(1)}% of assets`
                         : "No assets entered"
                     }
                     question={
                       blueprint.largestAsset
-                        ? `Would ${blueprint.largestAssetPercent.toFixed(0)}% in ${compactLabel(blueprint.largestAsset.description.trim() || assetCategoryLabels[blueprint.largestAsset.category])} meet your liquidity needs in a downturn?`
+                        ? `Would ${blueprint.largestAssetPercent.toFixed(1)}% in ${compactLabel(blueprint.largestAsset.description.trim() || assetCategoryLabels[blueprint.largestAsset.category])} meet your liquidity needs in a downturn?`
                         : "Which first asset would strengthen your financial foundation?"
                     }
                   />
                   <Metric
                     label="Investment Assets"
-                    value={money.format(blueprint.wealthAssets)}
+                    value={formatBlueprint("wealthAssets")}
                     detail={
                       unclassifiedAssetCount
                         ? `${unclassifiedAssetCount} asset${unclassifiedAssetCount === 1 ? " is" : "s are"} not classified`
-                        : `${blueprint.wealthAssetPercent.toFixed(0)}% of assets are invested`
+                        : `${blueprint.wealthAssetPercent.toFixed(1)}% of assets are invested`
                     }
                     question={
                       unclassifiedAssetCount
                         ? "Classify primary use to improve this insight."
-                        : `Does ${blueprint.wealthAssetPercent.toFixed(0)}% invested match your goals, horizon and risk capacity?`
+                        : `Does ${blueprint.wealthAssetPercent.toFixed(1)}% invested match your goals, horizon and risk capacity?`
                     }
                   />
                   <Metric
                     label="Annual Asset Income"
-                    value={money.format(blueprint.totalAssetIncome)}
-                    detail={`${money.format(blueprint.totalAssetIncome / 12)} per month`}
+                    value={formatBlueprint("totalAssetIncome")}
+                    detail={`${formatBlueprint("totalAssetIncome", value=>value / 12)} per month`}
                     question={
                       blueprint.totalAssetIncome > 0
                         ? `Does ${monthlyQuestionMoney(blueprint.totalAssetIncome / 12)} fit your need for income versus growth?`
@@ -2096,18 +2170,18 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                   />
                   <Metric
                     label="Accessible Assets"
-                    value={compactMoney(blueprint.accessibleAssets)}
+                    value={formatBlueprint("accessibleAssets")}
                     detail={
                       blueprint.accessibleMonths === null
                         ? "Coverage not available"
-                        : `${blueprint.accessibleMonths.toFixed(0)} months of current lifestyle`
+                        : `${blueprint.accessibleMonths.toFixed(1)} months of current lifestyle`
                     }
                     question={
                       blueprint.accessibleMonths === null
                         ? "Which asset could become dependable, accessible liquidity?"
                         : blueprint.accessibleMonths < 12
-                          ? `Would ${blueprint.accessibleMonths.toFixed(0)} months cover your obligations through an income shock?`
-                          : `Does holding ${blueprint.accessibleMonths.toFixed(0)} months accessible fit your near-term needs?`
+                          ? `Would ${blueprint.accessibleMonths.toFixed(1)} months cover your obligations through an income shock?`
+                          : `Does holding ${blueprint.accessibleMonths.toFixed(1)} months accessible fit your near-term needs?`
                     }
                   />
                 </div>
@@ -2123,7 +2197,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                 <div>
                   <Metric
                     label="Total Liabilities"
-                    value={money.format(blueprint.totalLiabilities)}
+                    value={formatBlueprint("totalLiabilities")}
                     detail={
                       blueprint.takeHomeIncome > 0
                         ? `${(blueprint.totalLiabilities / blueprint.takeHomeIncome).toFixed(1)}× annual income after tax`
@@ -2136,11 +2210,11 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                     }
                   />
                   <Metric
-                    label="Annual Interest Paid"
-                    value={money.format(blueprint.totalAnnualInterest)}
+                    label="Estimated Annual Interest"
+                    value={formatBlueprint("totalAnnualInterest")}
                     detail={
                       blueprint.totalAnnualInterest > 0
-                        ? `${money.format(blueprint.totalAnnualInterest / 12)} per month`
+                        ? `${formatBlueprint("totalAnnualInterest", value=>value / 12)} per month`
                         : "No annual interest entered"
                     }
                     question={
@@ -2153,7 +2227,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                     label="Debt / Assets"
                     value={
                       blueprint.totalAssets > 0
-                        ? metricPercent(blueprint.debtPercent)
+                        ? formatBlueprintPercent("debtPercent")
                         : "Not Available"
                     }
                     detail={
@@ -2174,7 +2248,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                     value={
                       blueprint.totalAnnualInterest === 0
                         ? "Not Applicable"
-                        : metricPercent(blueprint.assetIncomeInterestCoverage)
+                        : formatBlueprintPercent("assetIncomeInterestCoverage")
                     }
                     detail={
                       blueprint.totalAnnualInterest === 0
@@ -2206,13 +2280,13 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                 <div>
                   <Metric
                     label="Investment Share"
-                    value={metricPercent(blueprint.wealthAssetPercent)}
-                    detail={`${blueprint.wealthAssetPercent.toFixed(0)}% of assets are invested`}
+                    value={formatBlueprintPercent("wealthAssetPercent")}
+                    detail={`${blueprint.wealthAssetPercent.toFixed(1)}% of assets are invested`}
                     question={`What investment share fits your goals, horizon and risk capacity?`}
                   />
                   <Metric
                     label="Income Yield"
-                    value={metricPercent(blueprint.assetIncomeYield)}
+                    value={formatBlueprintPercent("assetIncomeYield")}
                     detail={
                       blueprint.assetIncomeYield === null
                         ? "No asset income reported"
@@ -2248,7 +2322,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                   />
                   <Metric
                     label="Interest Coverage"
-                    value={metricPercent(blueprint.assetIncomeInterestCoverage)}
+                    value={formatBlueprintPercent("assetIncomeInterestCoverage")}
                     detail={
                       blueprint.totalAnnualInterest === 0
                         ? "No annual interest entered"
@@ -2260,7 +2334,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                       blueprint.totalAnnualInterest === 0
                         ? "Have you captured every interest rate before deciding?"
                         : (blueprint.assetIncomeInterestCoverage ?? 0) >= 100
-                          ? `How durable is ${metricPercent(blueprint.assetIncomeInterestCoverage)} coverage if income falls?`
+                          ? `How durable is ${formatBlueprintPercent("assetIncomeInterestCoverage")} coverage if income falls?`
                           : `What changes first to close the ${metricPercent(100 - (blueprint.assetIncomeInterestCoverage ?? 0))} coverage gap?`
                     }
                   />
@@ -2274,34 +2348,34 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                 <div>
                   <Metric
                     label="Income Before Tax"
-                    value={money.format(numberValue(data.grossPersonalIncome))}
-                    detail={`${money.format(numberValue(data.grossPersonalIncome) / 12)} per month`}
+                    value={formatFinancial(financial.inputs.grossPersonalIncome)}
+                    detail={`${formatFinancial({...financial.inputs.grossPersonalIncome,value:financial.inputs.grossPersonalIncome.value===null?null:financial.inputs.grossPersonalIncome.value / 12})} per month`}
                     question={`What protects your plan if ${monthlyQuestionMoney(numberValue(data.grossPersonalIncome) / 12)} stops?`}
                   />
                   <Metric
                     label="Income After Tax"
-                    value={money.format(blueprint.takeHomeIncome)}
+                    value={formatBlueprint("takeHomeIncome")}
                     detail={`${data.effectiveTaxRate || "0"}% effective tax rate`}
                     question={`Is the ${data.effectiveTaxRate || "0"}% tax assumption verified and complete?`}
                   />
                   <Metric
                     label="Annual Investing"
-                    value={money.format(blueprint.annualInvesting)}
+                    value={formatBlueprint("annualInvesting")}
                     detail={
                       blueprint.takeHomeIncome > 0
-                        ? `${metricPercent(blueprint.investingRate)} of income after tax`
+                        ? `${formatBlueprintPercent("investingRate")} of income after tax`
                         : "Investing rate not available"
                     }
                     question={investingQuestion(blueprint.investingRate)}
                   />
                   <Metric
                     label={surplusLabel}
-                    value={money.format(blueprint.availableSurplus)}
+                    value={formatBlueprint("availableSurplus")}
                     context={
                       debtRepaymentAlreadyCounted
                         ? "Debt repayment already counted in your household costs"
                         : blueprint.annualDebtRepaymentDeducted > 0
-                          ? `Annual debt repayment ${money.format(blueprint.annualDebtRepaymentDeducted)}`
+                          ? `Annual debt repayment ${formatBlueprint("annualDebtRepaymentDeducted")}`
                           : undefined
                     }
                     detail={`${metricPercent(percentageOf(blueprint.availableSurplus, blueprint.takeHomeIncome))} of income after tax remains`}
@@ -2321,23 +2395,23 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                 <div>
                   <Metric
                     label="Annual Needs"
-                    value={money.format(blueprint.annualNeeds)}
+                    value={formatBlueprint("annualNeeds")}
                     detail={`${metricPercent(percentageOf(blueprint.annualNeeds, blueprint.currentLifestyle))} of lifestyle cost is essential`}
                     question={`Which part of ${questionMoney(blueprint.annualNeeds)} would be hardest to protect in a shock?`}
                   />
                   <Metric
                     label="Annual Wants"
-                    value={money.format(blueprint.annualWants)}
+                    value={formatBlueprint("annualWants")}
                     detail={`${metricPercent(percentageOf(blueprint.annualWants, blueprint.currentLifestyle))} of lifestyle cost is discretionary`}
                     question={`Which part of ${questionMoney(blueprint.annualWants)} adds enough value to keep?`}
                   />
                   <Metric
                     label="Annual Lifestyle Cost"
-                    value={money.format(blueprint.currentLifestyle)}
+                    value={formatBlueprint("currentLifestyle")}
                     detail={
                       blueprint.lifestyleCostShareOfTakeHome === null
                         ? "Share not available"
-                        : `${metricPercent(blueprint.lifestyleCostShareOfTakeHome)} of income after tax`
+                        : `${formatBlueprintPercent("lifestyleCostShareOfTakeHome")} of income after tax`
                     }
                     question={`If income fell 20%, what within ${questionMoney(blueprint.currentLifestyle)} would you protect first?`}
                   />
@@ -2347,7 +2421,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                         ? "Funding Gap After Investing"
                         : "Unallocated Cash"
                     }
-                    value={money.format(blueprint.cashAfterInvesting)}
+                    value={formatBlueprint("cashAfterInvesting")}
                     detail={
                       blueprint.cashAfterInvesting < 0
                         ? "Investing exceeds available surplus"
@@ -2411,11 +2485,11 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                     value={metricPercent(
                       blueprint.lifestyleCostShareOfTakeHome,
                     )}
-                    detail={`${metricPercent(blueprint.lifestyleCostShareOfTakeHome)} of income after tax supports lifestyle`}
+                    detail={`${formatBlueprintPercent("lifestyleCostShareOfTakeHome")} of income after tax supports lifestyle`}
                     question={
                       blueprint.lifestyleCostShareOfTakeHome === null
                         ? "What income would sustainably support this lifestyle?"
-                        : `At ${metricPercent(blueprint.lifestyleCostShareOfTakeHome)}, how much room remains for goals and shocks?`
+                        : `At ${formatBlueprintPercent("lifestyleCostShareOfTakeHome")}, how much room remains for goals and shocks?`
                     }
                   />
                   <Metric
@@ -2540,16 +2614,17 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                         <input
                           className="amount-slider"
                           type="range"
-                          min={blueprint.currentLifestyle}
+                          min={Number.isFinite(blueprint.currentLifestyle) ? blueprint.currentLifestyle : 0}
                           max={Math.max(
                             6_000_000,
-                            blueprint.currentLifestyle + 6_000_000,
-                            blueprint.currentLifestyle * 3,
+                            (Number.isFinite(blueprint.currentLifestyle) ? blueprint.currentLifestyle : 0) + 6_000_000,
+                            (Number.isFinite(blueprint.currentLifestyle) ? blueprint.currentLifestyle : 0) * 3,
                             numberValue(data.desiredLifestyleMonthly) * 12 * 1.25,
-                            blueprint.visionAnnualCost * 1.25,
+                            (Number.isFinite(blueprint.visionAnnualCost) ? blueprint.visionAnnualCost : 0) * 1.25,
                           )}
                           step="120000"
-                          value={blueprint.visionAnnualCost}
+                          value={Number.isFinite(blueprint.visionAnnualCost) ? blueprint.visionAnnualCost : 0}
+                          aria-valuetext={formatFinancial(financial.metrics.visioncost)}
                           onChange={(event) =>
                             updateDesiredLifestyle(
                               String(numberValue(event.target.value) / 12),
@@ -2571,9 +2646,9 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                     </div>
                     <div className="lifestyle-total">
                       <span>Desired monthly lifestyle</span>
-                      <strong>{money.format(blueprint.visionAnnualCost / 12)}</strong>
+                      <strong>{formatBlueprint("visionAnnualCost", value=>value / 12)}</strong>
                       <small>
-                        Today: {money.format(blueprint.currentLifestyle / 12)}
+                        Today: {formatBlueprint("currentLifestyle", value=>value / 12)}
                       </small>
                     </div>
                   </header>
@@ -2631,6 +2706,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                           </label>
                           <CurrencyField
                             label="Monthly Difference"
+                            status={financial.inputs[`lifestyleChanges.${change.id}.monthlyAmount`]}
                             value={change.monthlyAmount}
                             onChange={(monthlyAmount) =>
                               updateLifestyleChange(change.id, { monthlyAmount })
@@ -2679,17 +2755,17 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                   <div className="lifestyle-equation" aria-label="Desired lifestyle calculation">
                     <div>
                       <span>Current Lifestyle</span>
-                      <strong>{money.format(blueprint.currentLifestyle / 12)}</strong>
+                      <strong>{formatBlueprint("currentLifestyle", value=>value / 12)}</strong>
                     </div>
                     <i>{totalLifestyleChange < 0 ? "−" : "+"}</i>
                     <div>
                       <span>Planned Changes</span>
-                      <strong>{money.format(Math.abs(totalLifestyleChange))}</strong>
+                      <strong>{financial.metrics.visioncost.value === null ? "Not provided" : money.format(Math.abs(totalLifestyleChange))}</strong>
                     </div>
                     <i>=</i>
                     <div className="desired-result">
                       <span>Desired Lifestyle</span>
-                      <strong>{money.format(blueprint.visionAnnualCost / 12)}</strong>
+                      <strong>{formatBlueprint("visionAnnualCost", value=>value / 12)}</strong>
                     </div>
                     {data.visionLevel === "security" &&
                       numberValue(data.monthlyWants) > 0 && (
@@ -2780,6 +2856,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                         </label>
                         <CurrencyField
                           label="Amount"
+                          status={financial.inputs[`wealthGoalDetails.${goal}.amount`]}
                           value={detail.amount}
                           onChange={(amount) =>
                             updateWealthGoal(goal, { amount })
@@ -2883,7 +2960,8 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                   <div className="form-grid">
                     <CurrencyField
                       label="My Wealth Milestone"
-                      value={data.targetNetworth}
+                      status={financial.inputs.targetNetworth}
+                  value={data.targetNetworth}
                       onChange={(targetNetworth) => patchData({ targetNetworth })}
                       invalid={isInvalid("target-networth", !isMoneyValue(data.targetNetworth))}
                       errorMessage="Enter your wealth milestone."
@@ -2987,9 +3065,9 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
             <>
               <PageHeading
                 number="10"
-                eyebrow="From Vision to Action"
-                title="What actions are you already considering?"
-                copy="Capture every financial action already on your mind. Your MAP will test each one against your numbers, priorities and Vision."
+                eyebrow="Financial Review"
+                title="Your financial picture. Your next move."
+                copy="Review your completed MAP, then capture the actions you are considering. Choose what matters most to you."
               />
               <div className="choice-instruction action-instruction">
                 <span>Choose a category to add an action.</span>
@@ -3071,6 +3149,12 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
             </>
           )}
 
+          {step === 10 && financialReview && (
+            <div className="final-financial-review">
+              {reviewReady ? financialReview : <p role="status">Complete the earlier MAP steps and any unfinished action before opening your Financial Review.</p>}
+            </div>
+          )}
+
           {error && error !== PROFILE_REQUIRED_ERROR && (
             <p className="error" role="alert">
               {error}
@@ -3097,7 +3181,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
         </section>
       )}
 
-      {step === 11 && (
+      {showContent && step === 11 && financial.ready && (
         <section className="map-page stage-enter">
           <div className="map-inner">
             <header className="print-summary">
@@ -3105,10 +3189,11 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
               <h1>{data.moneyPurpose.trim() || primaryGoalStatement}</h1>
               <div>
                 <span>Current Net Worth</span>
-                <strong>{money.format(blueprint.networth)}</strong>
+                <strong>{formatBlueprint("networth")}</strong>
               </div>
             </header>
             <p className="eyebrow">Your Networth MAP</p>
+            {hasFinancialEstimates && <p role="status">This MAP includes estimates. Calculations and observations that use them remain estimates.</p>}
             <section className="map-goal" aria-label="Your personal Vision">
               <span>Your Vision</span>
               <blockquote>
@@ -3123,9 +3208,9 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                 <span><JourneyIcon kind="blueprint" />Your Blueprint</span>
                 <small>Financial Status</small>
                 <dl>
-                  <div className="map-route-featured"><dt>Current Net Worth</dt><dd>{compactMoney(blueprint.networth)}</dd></div>
-                  <div><dt>Total Assets</dt><dd>{compactMoney(blueprint.totalAssets)}</dd></div>
-                  <div><dt>Total Liabilities</dt><dd>{compactMoney(blueprint.totalLiabilities)}</dd></div>
+                  <div className="map-route-featured"><dt>Current Net Worth</dt><dd>{formatBlueprint("networth")}</dd></div>
+                  <div><dt>Total Assets</dt><dd>{formatBlueprint("totalAssets")}</dd></div>
+                  <div><dt>Total Liabilities</dt><dd>{formatBlueprint("totalLiabilities")}</dd></div>
                 </dl>
               </div>
               <i>→</i>
@@ -3133,8 +3218,8 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                 <span><JourneyIcon kind="vision" />Your Vision</span>
                 <small>Your North Star</small>
                 <dl>
-                  <div><dt>Target Net Worth</dt><dd>{numberValue(data.targetNetworth) > 0 ? compactMoney(numberValue(data.targetNetworth)) : "Not set"}</dd></div>
-                  <div><dt>Financial Freedom</dt><dd>{compactMoney(blueprint.visionAnnualCost)} / year</dd></div>
+                  <div><dt>Target Net Worth</dt><dd>{numberValue(data.targetNetworth) > 0 ? formatFinancial(financial.inputs.targetNetworth) : "Not set"}</dd></div>
+                  <div><dt>{visionLabel} lifestyle cost</dt><dd>{formatBlueprint("visionAnnualCost")} / year</dd></div>
                   <div><dt>Increase Amount</dt><dd>{compactMoney(Math.max(0, blueprint.visionAnnualCost - blueprint.currentLifestyle))} / year</dd></div>
                 </dl>
               </div>
@@ -3221,16 +3306,16 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
             <section className="print-full-details" aria-label="Complete assessment details">
               <h2>Complete Financial Details</h2>
               <div className="print-detail-grid">
-                <div><span>Current Net Worth</span><strong>{money.format(blueprint.networth)}</strong></div>
-                <div><span>Total Assets</span><strong>{money.format(blueprint.totalAssets)}</strong></div>
-                <div><span>Total Liabilities</span><strong>{money.format(blueprint.totalLiabilities)}</strong></div>
-                <div><span>Income Before Tax</span><strong>{money.format(numberValue(data.grossPersonalIncome))}</strong></div>
-                <div><span>Estimated Take-home</span><strong>{money.format(blueprint.takeHomeIncome)}</strong></div>
-                <div><span>Annual Lifestyle</span><strong>{money.format(blueprint.currentLifestyle)}</strong></div>
-                <div><span>Annual Debt Repayment</span><strong>{money.format(blueprint.totalAnnualDebtRepayment)}</strong></div>
-                <div><span>Annual Investing</span><strong>{money.format(blueprint.annualInvesting)}</strong></div>
-                <div><span>Available Cash</span><strong>{money.format(blueprint.availableSurplus)}</strong></div>
-                <div><span>Liquidity After Investing</span><strong>{money.format(blueprint.cashAfterInvesting)}</strong></div>
+                <div><span>Current Net Worth</span><strong>{formatBlueprint("networth")}</strong></div>
+                <div><span>Total Assets</span><strong>{formatBlueprint("totalAssets")}</strong></div>
+                <div><span>Total Liabilities</span><strong>{formatBlueprint("totalLiabilities")}</strong></div>
+                <div><span>Income Before Tax</span><strong>{formatFinancial(financial.inputs.grossPersonalIncome)}</strong></div>
+                <div><span>Estimated Take-home</span><strong>{formatBlueprint("takeHomeIncome")}</strong></div>
+                <div><span>Annual Lifestyle</span><strong>{formatBlueprint("currentLifestyle")}</strong></div>
+                <div><span>Annual Debt Repayment</span><strong>{formatBlueprint("totalAnnualDebtRepayment")}</strong></div>
+                <div><span>Annual Investing</span><strong>{formatBlueprint("annualInvesting")}</strong></div>
+                <div><span>Available Cash</span><strong>{formatBlueprint("availableSurplus")}</strong></div>
+                <div><span>Liquidity After Investing</span><strong>{formatBlueprint("cashAfterInvesting")}</strong></div>
               </div>
               <h3>Assets</h3>
               <table>
@@ -3241,8 +3326,8 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                       <td>{asset.description || "—"}</td>
                       <td>{assetCategoryLabels[asset.category]}</td>
                       <td>{asset.purpose === "investment" ? "Investments" : asset.purpose === "personal" ? "Personal / Lifestyle" : "—"}</td>
-                      <td>{money.format(numberValue(asset.value))}</td>
-                      <td>{money.format(numberValue(asset.annualNetIncome ?? ""))}</td>
+                      <td>{formatFinancial(financial.inputs[`assets.${asset.id}.value`])}</td>
+                      <td>{formatFinancial(financial.inputs[`assets.${asset.id}.annualNetIncome`])}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -3255,21 +3340,21 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                     <tr key={liability.id}>
                       <td>{liability.description || "—"}</td>
                       <td>{liabilityTypeLabels[liability.type]}</td>
-                      <td>{money.format(numberValue(liability.value))}</td>
+                      <td>{formatFinancial(financial.inputs[`liabilities.${liability.id}.value`])}</td>
                       <td>{numberValue(liability.interestRate ?? "").toFixed(1)}%</td>
-                      <td>{money.format(numberValue(liability.annualRepayment ?? ""))}</td>
+                      <td>{formatFinancial(financial.inputs[`liabilities.${liability.id}.annualRepayment`])}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
               <h3>Vision and Goals</h3>
               <div className="print-detail-copy">
-                <p><strong>Vision:</strong> {visionLabel} · {money.format(blueprint.visionAnnualCost)} per year</p>
+                <p><strong>Vision:</strong> {visionLabel} · {formatBlueprint("visionAnnualCost")} per year</p>
                 {data.moneyPurpose.trim() && <p><strong>Life envisioned:</strong> {data.moneyPurpose.trim()}</p>}
                 {data.wealthMotivation.trim() && <p><strong>Why it matters:</strong> {data.wealthMotivation.trim()}</p>}
                 {data.wealthGoals.map((goal) => {
                   const detail = data.wealthGoalDetails[goal];
-                  return <p key={goal}><strong>{wealthGoalLabels[goal]}:</strong> {detail?.description || "—"} · {money.format(numberValue(detail?.amount ?? ""))}{detail?.targetYear ? ` · ${detail.targetYear}` : ""}</p>;
+                  return <p key={goal}><strong>{wealthGoalLabels[goal]}:</strong> {detail?.description || "—"} · {financial.inputs[`wealthGoalDetails.${goal}.amount`]?formatFinancial(financial.inputs[`wealthGoalDetails.${goal}.amount`]):"Not provided"}{detail?.targetYear ? ` · ${detail.targetYear}` : ""}</p>;
                 })}
               </div>
               {!!data.proposedActions.length && (
@@ -3300,7 +3385,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                   <p>Complete your Networth MAP first. First 25 consultations only.</p>
                 </div>
                 <div className="email-contact-options">
-                  <form
+                  {allowEmailContact ? <form
                     className="email-capture-form"
                     onSubmit={(event) => {
                       event.preventDefault();
@@ -3330,7 +3415,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
                       {emailSubmitting ? "Saving…" : "Submit Email"}
                     </button>
                     {emailStatus && <p className="email-status" role="status">{emailStatus}</p>}
-                  </form>
+                  </form> : <p role="status">Use Google Login before requesting email contact.</p>}
                   <div className="email-submit-divider" aria-hidden="true" />
                   <a
                     className="primary email-booking-link"
@@ -3436,7 +3521,13 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
         </section>
       )}
 
-      {showQuickStart && (
+      {showContent && step === 11 && completedSteps.slice(1).every(Boolean) && financialReview && (
+        <section className="completed-map-review">{financialReview}</section>
+      )}
+
+      {showContent && step >= 1 && step <= 10 && <p className="map-save-status">Amounts are supplied by you, not externally verified. Choose Ask Your Money Coach to describe an estimate or an unknown. Required blank amounts cannot support calculations; they are never treated as zero.</p>}
+      {showContent && financial.contradictions.map(text=><p className="error" role="alert" key={text}>{text}</p>)}
+      {showContent && showQuickStart && (
         <div
           className="quick-start-overlay"
           role="dialog"
@@ -3444,6 +3535,15 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
           aria-labelledby="quick-start-title"
           onKeyDown={(event) => {
             if (event.key === "Escape") setShowQuickStart(false);
+            if (event.key === "Tab") {
+              const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)");
+              const first = buttons[0], last = buttons[buttons.length - 1];
+              if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault(); last?.focus();
+              } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault(); first?.focus();
+              }
+            }
           }}
         >
           <div className="quick-start-card">
@@ -3611,7 +3711,7 @@ export function NetworthAssessment({ memory, onChange, onDelete, onDraftStatus, 
 
 
 // Share the original welcome screen with the app entry point.
-export function NetworthWelcome({onBuild, buttonLabel = "Build My Networth Map", disabled = false, authMessage = ""}: {onBuild: () => void; buttonLabel?: string; disabled?: boolean; authMessage?: string}) {
+export function NetworthWelcome({onBuild, buttonLabel = "Build My Networth MAP", disabled = false, authMessage = ""}: {onBuild: () => void; buttonLabel?: string; disabled?: boolean; authMessage?: string}) {
   return (
         <section className="welcome">
           <div className="hero-copy">

@@ -1,12 +1,17 @@
 import {providerFailure} from "../shared/provider-error.mjs";
+import { internal } from "./_generated/api";
 import { action } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { authorizedUserId as getAuthUserId } from "./evaluator";
 
 export const ready = action({
   args: {},
   returns: v.boolean(),
-  handler: async () => Boolean(process.env.OPENAI_API_KEY),
+  handler: async (ctx) => {
+    const userId=await getAuthUserId(ctx);
+    if(userId && (await ctx.runQuery(internal.evaluator.access,{userId})).kind === "evaluator")return false;
+    return Boolean(process.env.OPENAI_API_KEY);
+  },
 });
 export const transcribe = action({
   args: {
@@ -27,6 +32,7 @@ export const transcribe = action({
         error:
           "The recording is empty or too large. Please record a shorter answer.",
       };
+    await ctx.runMutation(internal.evaluator.reserve,{operation:"speech"});
     const key = process.env.OPENAI_API_KEY;
     if (!key)
       return {

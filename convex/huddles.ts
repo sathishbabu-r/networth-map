@@ -1,9 +1,10 @@
 import { v, ConvexError } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { evaluatorBudget, authorizedUserId as getAuthUserId } from "./evaluator";
 import { query, mutation, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { content } from "./validators";
+import { financialStatus } from "../shared/financial-status";
 import { validateMap } from "../shared/map-engine";
 import { validateContent } from "../shared/huddle.mjs";
 export const current = query({
@@ -37,11 +38,12 @@ export const current = query({
   },
 });
 export const save = mutation({
-  args: { content, expectedRevision: v.number() },
+  args: { content, expectedRevision: v.number(), analytics:v.optional(v.object({sessionId:v.string(),device:v.union(v.literal("mobile"),v.literal("tablet"),v.literal("desktop"))})) },
   returns: v.number(),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new ConvexError("Sign in before saving.");
+    await evaluatorBudget(ctx,userId,"save");
     const old = await ctx.db
       .query("huddles")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -78,7 +80,9 @@ export const save = mutation({
       confirmedAt,
       complete: Boolean(c.goal && c.action && c.facts.length),
     });
+    const reviewed=await ctx.db.query("financialReviews").withIndex("by_user",q=>q.eq("userId",userId)).order("desc").first();
     await ctx.db.insert("huddleChanges", {
+      ...(reviewed?{financialReviewId:reviewed._id}:{}),
       huddleId: id,
       userId,
       oldContent: old?.content ?? null,
@@ -86,6 +90,14 @@ export const save = mutation({
       revision,
       confirmedAt,
     });
+    // The generation event commits atomically with the successful MAP save.
+    // Existing save limits apply; optional telemetry failure cannot lose this event.
+    if(c.map?.step===11 && old?.content.map?.step!==11 && financialStatus(validateMap(c.map)).ready){
+      const session=await ctx.db.query("evaluatorSessions").withIndex("by_user",q=>q.eq("userId",userId)).unique();
+      const supplied=args.analytics?.sessionId;
+      const sessionId=supplied&&/^[a-zA-Z0-9-]{1,64}$/.test(supplied)?supplied:String(session?._id??id);
+      await ctx.db.insert("productInsightEvents",{userId,sessionId,event:"map_generated",step:11,device:args.analytics?.device??"desktop",generationRevision:revision,...(session?{evaluatorSessionId:session._id}:{})});
+    }
     return revision;
   },
 });
@@ -97,6 +109,7 @@ export const history = query({
         _id: v.id("huddleChanges"),
         _creationTime: v.number(),
         huddleId: v.id("huddles"),
+        financialReviewId: v.optional(v.id("financialReviews")),
         userId: v.id("users"),
         oldContent: v.union(content, v.null()),
         newContent: content,
@@ -136,6 +149,7 @@ export const remove = mutation({
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new ConvexError("Sign in first.");
+    await ctx.scheduler.runAfter(0, internal.intelligence.clean, {userId});
     const saved = await ctx.db
       .query("huddles")
       .withIndex("by_user", (q) => q.eq("userId", userId))

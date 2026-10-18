@@ -1,3 +1,4 @@
+import {hasFinancialMarker} from "./uncertainty.mjs";
 // Conversation guidance only: no calculations or new stored fields.
 export function mapConversation(map) {
   const d = map?.data ?? {};
@@ -17,7 +18,7 @@ export function mapConversation(map) {
   add('wealthMilestoneChoice', 'Would you like to set a wealth milestone, or leave that for later?');
   if (d.wealthMilestoneChoice === 'yes') {
     add('targetNetworth', 'What net worth would you like to work towards?');
-    add('currentAge', 'How old are you currently?');
+    if (d.targetTiming !== 'year') add('currentAge', 'How old are you currently?');
     if (!(d.targetTiming === 'year' ? d.targetYear : d.targetAge)) missing.push({path:'targetTiming', question:'By what age or year would you like to reach that milestone?'});
   }
   return {role: missing.length ? 'build_map' : 'guide_next_move', missing};
@@ -35,9 +36,9 @@ export function financialChanges(proposal, confirmed) {
   if (!map) return changes;
   const labels = {grossPersonalIncome:'Annual personal income before tax',effectiveTaxRate:'Effective personal tax rate',monthlyNeeds:'Monthly household needs',monthlyWants:'Monthly lifestyle spending',annualInvesting:'Annual investing',desiredLifestyleMonthly:'Desired monthly lifestyle',currentAge:'Current age',targetAge:'Target age',targetYear:'Target year',targetNetworth:'Target net worth'};
   const add = (path, label, value, previous, unit='money') => {
-    if (value === '' || value == null || map.unknowns.includes(path)) return;
-    if (value === previous && map.estimates.includes(path) === Boolean(oldMap?.estimates.includes(path))) return;
-    changes.push({label, value:unit === 'money' ? `₹${Number(value).toLocaleString('en-IN')}` : `${value}${unit==='percent'?'%':''}`, detail:map.estimates.includes(path)?'Estimate':'As supplied'});
+    if (value == null || String(value).trim() === '' || hasFinancialMarker(map.unknowns,path)) return;
+    if (value === previous && hasFinancialMarker(map.estimates,path) === Boolean((oldMap && hasFinancialMarker(oldMap.estimates,path)))) return;
+    changes.push({label, value:unit === 'money' ? `₹${Number(value).toLocaleString('en-IN')}` : `${value}${unit==='percent'?'%':''}`, detail:hasFinancialMarker(map.estimates,path)?'Estimate':'As supplied'});
   };
   for (const [path,label] of Object.entries(labels)) add(path,label,map.data[path],oldMap?.data[path],path==='effectiveTaxRate'?'percent':['currentAge','targetAge','targetYear'].includes(path)?'plain':'money');
   for (const collection of ['assets','liabilities','lifestyleChanges','wealthGoalDetails']) {

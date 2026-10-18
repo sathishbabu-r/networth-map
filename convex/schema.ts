@@ -53,6 +53,9 @@ const clarityRating = v.union(
 
 export default defineSchema({
   ...authTables,
+  evaluatorSessions: defineTable({userId:v.id("users"),createdAt:v.number(),expiresAt:v.number(),revoked:v.boolean()}).index("by_user",["userId"]),
+  evaluatorLimits: defineTable({key:v.string(),count:v.number(),expiresAt:v.number()}).index("by_key",["key"]),
+  financialReviews: defineTable({userId:v.id("users"),revision:v.number(),report:v.string(),createdAt:v.number()}).index("by_user",["userId"]),
   huddles: defineTable({
     userId: v.id("users"),
     content,
@@ -62,6 +65,7 @@ export default defineSchema({
   }).index("by_user", ["userId"]),
   huddleChanges: defineTable({
     huddleId: v.id("huddles"),
+    financialReviewId: v.optional(v.id("financialReviews")),
     userId: v.id("users"),
     oldContent: v.union(content, v.null()),
     newContent: content,
@@ -72,6 +76,8 @@ export default defineSchema({
     userId: v.id("users"),
     sessionId: v.string(),
     event: insightEvent,
+    generationRevision: v.optional(v.number()),
+    evaluatorSessionId: v.optional(v.id("evaluatorSessions")),
     step: v.optional(v.number()),
     device: deviceClass,
     validationCode: v.optional(validationCode),

@@ -1,0 +1,62 @@
+// @vitest-environment jsdom
+import React from 'react';
+import {test,expect,vi,afterEach} from 'vitest';
+import {render,screen,fireEvent,waitFor,cleanup} from '@testing-library/react';
+import {emptyMap,memoryFromAssessment} from '../shared/map-engine';
+import {emptyAssessment} from '../shared/networth-engine';
+import {NetworthMap} from '../src/NetworthMap';
+import {DailyCheckIn} from '../src/DailyCheckIn';
+import {ProgressDashboard} from '../src/ProgressDashboard';
+import {localDay} from '../shared/daily-progress.mjs';
+vi.mock('../src/original-map/use-product-insights',()=>({useProductInsights:()=>({track:()=>{},markMapCompleted:async()=> 'test',submitFeedback:async()=>null,submitCompletedMapEmail:async()=>null})}));
+afterEach(cleanup);
+const map=()=>memoryFromAssessment({...emptyAssessment,userType:'salaried',grossPersonalIncome:'1800000',effectiveTaxRate:'15',assets:[{id:'cash',description:'Synthetic savings',category:'cash',value:'300000',purpose:'personal',annualNetIncome:'0'}],liabilities:[],hasNoLiabilitiesConfirmed:true,monthlyNeeds:'50000',monthlyWants:'10000',annualInvesting:'120000',visionLevel:'security',visionChoiceConfirmed:true,wealthGoals:['dreams'],wealthGoalDetails:{dreams:{description:'Travel',amount:'100000',targetYear:'2030',priority:'important',flexibility:'date'}},wealthMilestoneChoice:'not-yet',proposedActions:[]},null,11);
+const saved=()=>({revision:1,content:{concern:'Synthetic planning',facts:[],goal:null,action:null,outcome:null,map:map()}});
+const props=()=>({saved:saved(),history:{page:[],isDone:true},onChange:vi.fn(),onDraftStatus:vi.fn(),onDelete:vi.fn(),onCheckIn:vi.fn(),onCoach:vi.fn(),review:<p>Existing Financial Review</p>});
+test('review is gated until MAP answers are complete; daily check-in and dashboard unlock only after all 10 steps',()=>{
+ Element.prototype.scrollTo=()=>{};window.matchMedia=()=>({matches:false});
+ const p=props();const partial={...p.saved,content:{...p.saved.content,map:emptyMap()}};
+ const view=render(<NetworthMap {...p} saved={partial}/>);
+ expect(screen.queryByText('Existing Financial Review')).toBeNull();expect(screen.getByRole('button',{name:'Step 11: Daily Check-in'}).disabled).toBe(true);
+ expect(screen.queryByRole('navigation',{name:'MAP views'})).toBeNull();
+ view.rerender(<NetworthMap {...p}/>);
+ expect(screen.queryByRole('button',{name:'Edit Personal Profile'})).toBeNull();
+ expect(screen.getByRole('button',{name:'Step 1: Personal Profiling, completed'}).textContent).toBe('Profile');
+ expect(screen.getByText('Existing Financial Review')).toBeTruthy();
+ fireEvent.click(screen.getByRole('button',{name:'Step 11: Daily Check-in'}));
+ expect(screen.getByRole('heading',{name:'One action. A little more clarity.'})).toBeTruthy();
+ fireEvent.click(screen.getByRole('button',{name:'Step 12: My Progress'}));
+ expect(screen.getByRole('heading',{name:'Your actions are becoming a story.'})).toBeTruthy();expect(screen.getByText('Existing Financial Review')).toBeTruthy();
+ expect(screen.getByText('Your first check-in will start your progress story. You do not need a perfect day to begin.')).toBeTruthy();
+ fireEvent.click(screen.getByRole('button',{name:'Step 1: Personal Profiling, completed'}));
+ expect(screen.getByRole('heading',{name:'What is your income before tax?'})).toBeTruthy();
+});
+test('Step 10 contains Financial Review only when earlier answers are complete',()=>{
+ const p=props();p.saved.content.map.step=10;p.saved.content.map.covered=p.saved.content.map.covered.filter(x=>x!=='reflect');
+ const view=render(<NetworthMap {...p}/>);
+ expect(screen.getByRole('button',{name:'Step 10: Financial Review'}).getAttribute('aria-current')).toBe('step');
+ expect(screen.getByText('Existing Financial Review')).toBeTruthy();expect(screen.getByRole('button',{name:'Step 11: Daily Check-in'}).disabled).toBe(true);
+ view.rerender(<NetworthMap {...p} saved={{...p.saved,content:{...p.saved.content,map:{...p.saved.content.map,unknowns:['grossPersonalIncome']}}}}/>);
+ expect(screen.queryByText('Existing Financial Review')).toBeNull();
+});
+test('daily check-in confirmation saves real values without modifying MAP and failed save preserves the draft',async()=>{
+ const s=saved(),save=vi.fn().mockRejectedValueOnce(Error('Could not save')).mockResolvedValueOnce(2),done=vi.fn();
+ render(<DailyCheckIn saved={s} onSave={save} onSaved={done}/>);
+ fireEvent.change(screen.getByLabelText('Your action'),{target:{value:'Reviewed recurring costs'}});
+ fireEvent.change(screen.getByLabelText('What changed?'),{target:{value:'Cancelled an unused subscription'}});
+ fireEvent.change(screen.getByLabelText('Actual financial result'),{target:{value:'expense_reduction'}});
+ fireEvent.change(screen.getByLabelText('Amount actually realised (₹)'),{target:{value:'0'}});
+ expect(screen.getByRole('button',{name:'Save My Check-in'}).disabled).toBe(true);
+ fireEvent.click(screen.getByRole('checkbox',{name:/I confirm this check-in/}));
+ fireEvent.click(screen.getByRole('button',{name:'Save My Check-in'}));
+ await screen.findByText('Could not save');expect(screen.getByLabelText('What changed?').value).toBe('Cancelled an unused subscription');expect(done).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByRole('button',{name:'Save My Check-in'}));await waitFor(()=>expect(done).toHaveBeenCalledOnce());
+ const call=save.mock.calls[1][0];expect(call.expectedRevision).toBe(1);expect(call.content.map).toEqual(s.content.map);expect(call.content.outcome.amount).toBe(0);expect(call.content.facts[0].asOf).toBe('');
+});
+test('dashboard labels activity separately from wealth, preserves zero results, and flags incomplete loaded history',()=>{
+ const record={key:'one',action:'Reviewed recurring costs',actionStatus:'completed',text:'Learned more',occurredOn:localDay(),impactType:'expense_reduction',amount:0};
+ render(<ProgressDashboard records={[record]} map={map()} incompleteHistory review={<p>Saved review</p>} onCheckIn={()=>{}}/>);
+ expect(screen.getByText('Expense reduced · '+localDay())).toBeTruthy();expect(screen.getAllByText('₹0').length).toBeGreaterThan(0);
+ expect(screen.getByText('Actions recorded, not wealth gained. Days without a check-in are unreported.')).toBeTruthy();
+ expect(screen.getByText(/These figures cover your loaded records/)).toBeTruthy();expect(screen.getByRole('listitem',{name:localDay()+': 1 completed check-ins'})).toBeTruthy();
+});

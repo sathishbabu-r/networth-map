@@ -1,0 +1,8 @@
+{
+  "source": "Actual deployed Coach, synthetic evaluator, unchanged numeric matcher with temporary scoped trace",
+  "question": "Using my saved MAP, what is my annual surplus after loan repayment and after investing?",
+  "reply": "Your annual surplus before investing is ₹5,40,000. After your annual loan repayment of ₹3,00,000, your surplus would be ₹2,40,000. After investing ₹2,40,000, you would have ₹0 left as surplus.",
+  "savedRevision": 7,
+  "expectedSurplus": 540000,
+  "expectedAfterInvesting": 300000
+}

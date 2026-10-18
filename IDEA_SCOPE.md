@@ -1,5 +1,29 @@
 # IDEA LOCK · Build Sprint
 
+## Current idea lock — 10 October 2026
+
+This lock consolidates the existing project decisions. The newly supplied template contained no additional answers. The earlier sections below preserve decision history; where they conflict with this lock or PRODUCT.md v1.1, the current direction takes precedence. Requirements and hypotheses are not claims of working production behaviour.
+
+- **Idea:** Networth MAP and Money Huddle help a business owner understand their financial position, think through a pressing money decision, choose an action and learn from its actual outcome.
+- **Why me:** The builder's recorded background is Chartered Accountant, more than 20 years in finance, internal controls, governance and digital transformation, hands-on MAP preparation, and access to professional, business and Rotary networks.
+- **One goal — money:** When school fees are due, understand accessible cash, competing commitments and the funding gap, then choose a realistic way to pay on time while keeping repayment risks visible. A plan or promise is not payment.
+- **Delta 4:** Today: gather statements, consult trusted people, assemble figures, weigh choices and remember follow-up. Product: describe the issue, clarify relevant facts, understand the gap, choose an action and return with the outcome. Fourfold improvement and a 15-minute Huddle remain hypotheses to measure.
+- **Optional sin:** Avoidance of financial organisation; make starting and returning easier without blaming the user.
+- **Initial user and trigger:** Ratheesh, a business owner whose daughter's school fees were due. His recorded current response is calling a friend to arrange money; postponing a wider review is also part of the current path.
+- **Trust:** CA, adviser, spouse and experienced peers. Earn product trust through understandable calculations, visible uncertainty and user control.
+- **Payment:** Willingness to pay is unproven. PRODUCT.md v1.1's founding-member hypothesis is ₹499/month; it supersedes the earlier ₹999 offer. No payment implementation is authorised by this lock.
+- **Onboarding:** Address the pressing issue with one relevant question at a time, using typed or reviewed voice answers. Build the wider MAP progressively. Keep the existing 12-step assessment available; do not make completion of unrelated sections a prerequisite for discussing an urgent issue.
+- **Core loop:** Confirm facts → understand the financial picture → explore choices with Coach → choose a voluntary action → report what happened → learn and explicitly update financial facts when supplied. Existing user stories below remain the source; none are newly attributed to the builder here.
+- **Coming back:** Follow up on a chosen action or a new concern. Separate completing an action, reporting a financial result and changing a balance. No unsolicited reminders.
+- **AI-first part:** Financial Intelligence and Personal CFO organise and explain supported evidence; Coach helps the user deliberate. Code calculates financial amounts. No invented facts, autonomous transactions or claims of better reasoning without evaluation.
+- **Market:** Funding, search trends and timing evidence remain unverified. Existing comparison candidates are INDmoney, Fold, spreadsheets and trusted advisers; specific flow reviews and competitor screenshots remain incomplete. These are research candidates, not verified current competitive findings.
+- **Network fit:** 30 prospects, 10 interviews and five initial pilots are recruitment targets, not counted qualified users or market size.
+- **Boundaries:** Preserve Convex, Google authentication, private account controls, the existing MAP and read-only synthetic demo. Bank connections, automatic transactions and regulated product recommendations remain outside scope. This lock does not authorise new features or deployment.
+
+**Next validation:** Observe Ratheesh independently work through his real trigger; record time to clarity, whether the funding plan is credible, follow-through to payment, unresolved repayment risk and willingness to pay. Do not substitute a completed session or scripted demo for a real outcome.
+
+---
+
 > **Approved expansion — 3 October 2026:** The integrated Networth MAP, conversational completion and daily progress scope is recorded in [MAP_HUDDLE_SCOPE.md](docs/MAP_HUDDLE_SCOPE.md). It replaces the earlier exclusions for the full MAP and daily check-ins.
 
 ## THE IDEA

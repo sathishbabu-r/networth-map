@@ -3,3 +3,18 @@
 node_modules/
 dist/
 .DS_Store
+
+.test-data/
+
+# Local credentials and private test evidence are never published.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+docs/validation/*
+!docs/validation/persona.ts
+launch-video-assets/
+launch-video-assets.zip
+portrait.jpg
+.impeccable/

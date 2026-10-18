@@ -16,9 +16,11 @@ export function useConvexAuth() {
 export function useQuery(ref, args) {
   const state = useSyncExternalStore(subscribe, snapshot);
   if (args === 'skip') return undefined;
+  if(getFunctionName(ref)==='intelligence:latest')return null;
   return getFunctionName(ref) === 'huddles:history' ? history : state.saved;
 }
 const actions = {
+  'intelligence:review': async()=>JSON.stringify({map_version:session.saved?.revision??0,cfo:{story:'Sample review: your income alone is not enough to assess surplus.',insights:[],strategic_gap:'Complete your spending and debt details.',attention_now:'What monthly expenses do you have?',tradeoffs:[],no_action:'No financial action is required from this sample.',caveats:['Sample data only; AI services are not connected.']},verified:{state:'INSUFFICIENT_DATA',calculations:[]}}),
   'coach:status': async () => ({ google: true, coach: true, speech: true }),
   'speech:ready': async () => false,
   'speech:transcribe': async () => { throw new Error('Voice transcription is not connected in the local sample preview.'); },

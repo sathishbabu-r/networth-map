@@ -1,3 +1,4 @@
+import { summarizeAnalytics } from "../shared/product-analytics";
 import { v } from "convex/values";
 import {
   internalQuery, internalMutation, query,
@@ -6,7 +7,7 @@ import {
 import schema from "./schema";
 import { paginationOptsValidator } from "convex/server";
 import { internal } from "./_generated/api";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { evaluatorBudget, evaluatorRecord, authorizedUserId as getAuthUserId } from "./evaluator";
 
 const eventValidator = v.union(
   v.literal("assessment_started"),
@@ -95,6 +96,8 @@ export const track = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Sign in first.");
+    if(args.event==="map_generated") throw new Error("MAP generation is recorded by the successful save.");
+    await evaluatorBudget(ctx,userId,"telemetry");
     assertSafeSession(args.sessionId);
     if (args.step !== undefined) assertStep(args.step);
     const existing = await ctx.db
@@ -120,26 +123,13 @@ export const completeMap = mutation({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Sign in first.");
     assertSafeSession(args.sessionId);
-    const existing = await ctx.db
-      .query("productInsightEvents")
-      .withIndex("by_user_session", (query) =>
-        query.eq("userId", userId!).eq("sessionId", args.sessionId),
-      )
-      .take(500);
-    const completion = existing.find(
-      (event) => event.event === "map_generated" && event.step === 11,
-    );
-    if (completion) return completion._id;
-    if (existing.length >= 500) {
-      throw new Error("Event limit reached for this session.");
-    }
-    return await ctx.db.insert("productInsightEvents", {
-      userId,
-      sessionId: args.sessionId,
-      event: "map_generated",
-      step: 11,
-      device: args.device,
-    });
+    const saved=await ctx.db.query("huddles").withIndex("by_user",q=>q.eq("userId",userId)).unique();
+    if(saved?.content.map?.step!==11)throw new Error("Save your generated MAP first.");
+    const existing=await ctx.db.query("productInsightEvents").withIndex("by_user",q=>q.eq("userId",userId)).order("desc").take(500);
+    const completion=existing.find(e=>e.event==="map_generated"&&e.generationRevision!==undefined&&e.generationRevision<=saved.revision)
+      ?? existing.find(e=>e.event==="map_generated"&&e.step===11);
+    if(!completion)throw new Error("Your successful MAP save has not been recorded yet. Retry after saving finishes.");
+    return completion._id;
   },
 });
 
@@ -166,6 +156,7 @@ export const submitCompletedMapEmail = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Sign in first.");
+    if ((await evaluatorRecord(ctx,userId)).kind === "evaluator") throw Error("Use Google Login before requesting email contact.");
     const email = normalizeEmail(args.email);
     assertValidEmail(email);
     if (!Number.isFinite(args.submittedAt)) {
@@ -224,6 +215,7 @@ export const submitFeedback = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Sign in first.");
+    await evaluatorBudget(ctx,userId,"telemetry");
     assertSafeSession(args.sessionId);
     assertStep(args.step);
     const message = safeFeedbackMessage(args.message);
@@ -340,4 +332,29 @@ export const exportRows=query({
 export const deleteAccountRows=internalMutation({
  args:{userId:v.id("users"),table:personalTables},returns:v.null(),
  handler:async(ctx,args)=>{const rows=await ctx.db.query(args.table).withIndex("by_user",q=>q.eq("userId",args.userId)).take(100);for(const row of rows)await ctx.db.delete(row._id);if(rows.length===100)await ctx.scheduler.runAfter(0,internal.productInsights.deleteAccountRows,args);return null;}
+});
+
+// Owner-only aggregate view. Existing tracking and financial records are unchanged.
+async function analyticsOwner(ctx: import('./_generated/server').QueryCtx) {
+ const id=await getAuthUserId(ctx);if(!id)return false;
+ const user=await ctx.db.get(id);if(!user||user.isAnonymous||!user.email||user.emailVerificationTime===undefined)return false;
+ const allowed=(process.env.ANALYTICS_OWNER_EMAILS??'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
+ if(!allowed.includes(user.email.toLowerCase()))return false;
+ const google=await ctx.db.query('authAccounts').withIndex('userIdAndProvider',q=>q.eq('userId',id).eq('provider','google')).first();
+ return Boolean(google);
+}
+export const analyticsAccess=query({args:{},returns:v.boolean(),handler:analyticsOwner});
+const countRows=v.array(v.object({label:v.string(),count:v.number()}));
+export const analyticsDashboard=query({
+ args:{days:v.union(v.literal(7),v.literal(30),v.literal(90)),cohort:v.union(v.literal('all'),v.literal('private'),v.literal('evaluator'))},
+ returns:v.union(v.null(),v.object({events:v.number(),sessions:v.number(),started:v.number(),generated:v.number(),generationEvents:v.number(),generationUsers:v.number(),legacyGenerationEvents:v.number(),completedStarts:v.number(),completionRate:v.union(v.number(),v.null()),steps:v.array(v.object({step:v.number(),viewed:v.number(),completed:v.number(),notCompleted:v.number(),validationErrors:v.number()})),eventCounts:countRows,devices:countRows,errors:countRows,sampled:v.boolean(),windowStart:v.number(),sampleStart:v.union(v.number(),v.null()),generatedAt:v.number(),cohort:v.string()})),
+ handler:async(ctx,args)=>{
+  if(!await analyticsOwner(ctx))return null;
+  const now=Date.now(),windowStart=now-args.days*86400000;
+  const rows=await ctx.db.query('productInsightEvents').withIndex('by_creation_time',q=>q.gte('_creationTime',windowStart)).order('desc').take(4001);
+  const recent=rows.slice(0,4000);const kinds=new Map<string,string>();
+  for(const row of recent){if(!kinds.has(row.userId)){const user=await ctx.db.get(row.userId);kinds.set(row.userId,user?(user.isAnonymous?'evaluator':'private'):'unknown');}}
+  const selected=recent.filter(e=>args.cohort==='all'||kinds.get(e.userId)===args.cohort);
+  return {...summarizeAnalytics(selected),sampled:rows.length>4000,windowStart,sampleStart:recent.at(-1)?._creationTime??null,generatedAt:now,cohort:args.cohort};
+ }
 });

@@ -10,8 +10,10 @@
 
 import type * as auth from "../auth.js";
 import type * as coach from "../coach.js";
+import type * as evaluator from "../evaluator.js";
 import type * as http from "../http.js";
 import type * as huddles from "../huddles.js";
+import type * as intelligence from "../intelligence.js";
 import type * as mapValidator from "../mapValidator.js";
 import type * as productInsights from "../productInsights.js";
 import type * as providerProbe from "../providerProbe.js";
@@ -27,8 +29,10 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   coach: typeof coach;
+  evaluator: typeof evaluator;
   http: typeof http;
   huddles: typeof huddles;
+  intelligence: typeof intelligence;
   mapValidator: typeof mapValidator;
   productInsights: typeof productInsights;
   providerProbe: typeof providerProbe;

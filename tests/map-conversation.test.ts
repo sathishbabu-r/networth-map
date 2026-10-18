@@ -17,3 +17,9 @@ test('financial review shows changed amounts only and never turns unknowns into 
  expect(financialChanges(content,structuredClone(content))).toEqual([]);
  map.unknowns=['monthlyNeeds'];expect(financialChanges(content,null)).toEqual([]);
 });
+
+test('year-based milestones do not request age fields',()=>{
+ const m=emptyMap();Object.assign(m.data,{wealthMilestoneChoice:'yes',targetTiming:'year',targetYear:'2036',targetNetworth:'5000000'});
+ expect(mapConversation(m).missing.map(x=>x.path)).not.toContain('currentAge');
+ m.data.targetTiming='age';expect(mapConversation(m).missing.map(x=>x.path)).toContain('currentAge');
+});

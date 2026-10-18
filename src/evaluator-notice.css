@@ -1,0 +1,8 @@
+.evaluator-notice-summary{display:none}
+@media(max-width:640px){
+ aside.evaluator-notice{margin:8px 16px;padding:4px 12px}
+ .evaluator-notice-summary{display:flex;align-items:center;justify-content:space-between;gap:8px;white-space:nowrap;font-size:13px}
+ .evaluator-notice-summary .evaluator-notice-toggle{min-width:44px;min-height:44px;padding:0 8px;flex-shrink:0;font-size:13px}
+ .evaluator-notice-content[data-expanded="false"]{display:none}
+ .evaluator-notice-content{padding:8px 0 12px}
+}

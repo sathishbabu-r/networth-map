@@ -4,12 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
+    "dev": "npx convex dev --start 'vite --host 127.0.0.1'",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "node --test tests/*.test.mjs && vitest run",
     "deploy": "npx @convex-dev/static-hosting deploy",
-    "test:browser": "vite --config tests/browser/vite.config.mjs"
+    "test:browser": "vite --config tests/browser/vite.config.mjs",
+    "dev:test": "APP_TEST_MODE=1 vite --mode development",
+    "typecheck": "tsc --noEmit -p convex/tsconfig.json && tsc --noEmit -p local-test/tsconfig.json",
+    "predeploy": "node local-test/check-release.mjs"
   },
   "keywords": [],
   "author": "",

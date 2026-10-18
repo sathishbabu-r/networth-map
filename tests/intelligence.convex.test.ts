@@ -1,0 +1,31 @@
+import {test,expect,vi,afterEach} from 'vitest';
+import {convexTest} from 'convex-test';
+import schema from '../convex/schema';
+import {api,internal} from '../convex/_generated/api';
+import {emptyMap} from '../shared/map-engine';
+const modules=import.meta.glob('../convex/**/*.{ts,js}');
+afterEach(()=>vi.useRealTimers());
+test('review ledger is private, rejects stale writes, exports and deletes with account data',async()=>{
+ vi.useFakeTimers();const t=convexTest(schema,modules);
+ const id=await t.run(ctx=>ctx.db.insert('users',{name:'Synthetic pilot'}));const other=await t.run(ctx=>ctx.db.insert('users',{name:'Other pilot'}));
+ const user=t.withIdentity({subject:id+'|s'}),stranger=t.withIdentity({subject:other+'|s'});
+ const c={concern:'Clarity',facts:[],goal:null,action:null,outcome:null,map:emptyMap()};
+ await user.mutation(api.huddles.save,{content:c,expectedRevision:0});
+ await expect(t.mutation(internal.intelligence.record,{userId:id,revision:0,report:'{}'})).rejects.toThrow('MAP changed');
+ await t.mutation(internal.intelligence.record,{userId:id,revision:1,report:JSON.stringify({cfo:{story:'Test'},verified:{state:'INSUFFICIENT_DATA',missing:['income'],risk:'low'}})});
+ expect(await stranger.query(api.intelligence.latest,{})).toBeNull();expect((await stranger.query(api.intelligence.exportRows,{paginationOpts:{numItems:10,cursor:null}})).page).toEqual([]);
+ expect((await user.query(api.intelligence.latest,{}))?.revision).toBe(1);
+ expect(await t.query(internal.intelligence.coachContext,{userId:id,revision:2})).toBeNull();
+ await user.mutation(api.huddles.remove,{});await t.finishAllScheduledFunctions(vi.runAllTimers);
+ expect(await user.query(api.intelligence.latest,{})).toBeNull();
+});
+test('Coach does not reuse pre-fix financial reviews and accepts reports checked with the current policy',async()=>{
+ const t=convexTest(schema,modules);const id=await t.run(ctx=>ctx.db.insert('users',{name:'Synthetic review policy'}));const user=t.withIdentity({subject:id+'|s'});
+ await user.mutation(api.huddles.save,{content:{concern:'Clarity',facts:[],goal:null,action:null,map:emptyMap()},expectedRevision:0});
+ const report={cfo:{story:'Legacy unsupported conclusion'},verified:{state:'INSUFFICIENT_DATA',missing:[],risk:'low'}};
+ await t.mutation(internal.intelligence.record,{userId:id,revision:1,report:JSON.stringify(report)});
+ expect(await t.query(internal.intelligence.coachContext,{userId:id,revision:1})).toBeNull();
+ expect((await user.query(api.intelligence.latest,{}))?.report).toBe(JSON.stringify(report));
+ await t.mutation(internal.intelligence.record,{userId:id,revision:1,report:JSON.stringify({...report,data_policy_version:'financial-integrity-v2'})});
+ expect(await t.query(internal.intelligence.coachContext,{userId:id,revision:1})).toContain('Legacy unsupported conclusion');
+});

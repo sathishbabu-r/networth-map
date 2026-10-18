@@ -1,3 +1,4 @@
+import { checkInContent, dailyProgressRecords } from "../shared/daily-progress.mjs";
 import { emptyMap } from "../shared/map-engine";
 import { test, expect } from "vitest";
 import { convexTest } from "convex-test";
@@ -169,4 +170,29 @@ test("MAP memory survives return visits and is isolated from another account",as
  await a.mutation(api.huddles.save,{content:{...initial(),map},expectedRevision:0});
  const returning=t.withIdentity({subject:aId+"|return"});expect((await returning.query(api.huddles.current,{}))?.content.map?.data.monthlyNeeds).toBe("90000");expect(await b.query(api.huddles.current,{})).toBeNull();
  const history=await returning.query(api.huddles.history,{paginationOpts:{numItems:10,cursor:null},latestFirst:true});expect(history.page[0].newContent.map?.covered).toEqual(["spend"]);
+});
+
+
+test("MAP review and reflection completion markers persist through the real save validators",async()=>{
+ const {a}=await setup();const map=emptyMap();map.step=1;map.covered=["earn","blueprint","reflect"];
+ await a.mutation(api.huddles.save,{content:{...initial(),map},expectedRevision:0});
+ const saved=await a.query(api.huddles.current,{});
+ expect(saved?.content.map?.covered).toEqual(map.covered);expect(saved?.content.map?.data).toEqual(map.data);
+});
+
+
+test("confirmed daily check-ins persist privately through the existing mutation and retain MAP balances",async()=>{
+ const {a,b}=await setup();const map=emptyMap();map.step=11;map.covered=["earn","own","owe","spend","invest","blueprint","lifestyle","goals","milestone","reflect"];
+ const content={...initial(),map};
+ const values={action:"Reviewed spending",goal:"Understand my costs",useExisting:false,status:"completed",date:"2026-10-10",change:"Reviewed subscriptions",obstacle:"",impactType:"none",amount:"",confirmed:true};
+ const first=checkInContent(content,values,null,"2026-10-10");
+ await a.mutation(api.huddles.save,{content:first,expectedRevision:0});
+ const second=checkInContent(first,{...values,useExisting:true,date:"2026-10-09",status:"partial",change:"Started the review"},null,"2026-10-10");
+ await a.mutation(api.huddles.save,{content:second,expectedRevision:1});
+ const saved=await a.query(api.huddles.current,{});
+ expect(saved?.content.map).toEqual(map);expect(saved?.content.facts).toEqual(content.facts);expect(saved?.content.outcome?.amount).toBeNull();
+ expect(await b.query(api.huddles.current,{})).toBeNull();
+ const history=await a.query(api.huddles.history,{paginationOpts:{numItems:10,cursor:null},latestFirst:true});
+ expect(dailyProgressRecords(history.page,saved)).toHaveLength(2);
+ await expect(a.mutation(api.huddles.save,{content:first,expectedRevision:1})).rejects.toThrow(/another tab/);
 });

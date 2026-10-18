@@ -43,7 +43,7 @@ export type ClarityRating = "yes" | "partly" | "no";
 
 const SESSION_KEY = "networth-map-insight-session";
 let inMemorySessionId: string | undefined;
-const sessionId = () => {
+export const insightSessionId = () => {
   try {
     const saved = sessionStorage.getItem(SESSION_KEY);
     if (saved) return saved;
@@ -56,7 +56,7 @@ const sessionId = () => {
   }
 };
 
-const deviceClass = (): "mobile" | "tablet" | "desktop" =>
+export const insightDeviceClass = (): "mobile" | "tablet" | "desktop" =>
   window.innerWidth < 640
     ? "mobile"
     : window.innerWidth < 1024
@@ -71,9 +71,9 @@ export function useProductInsights() {
       metadata: { step?: number; validationCode?: ValidationCode } = {},
     ) => {
       void trackMutation( {
-        sessionId: sessionId(),
+        sessionId: insightSessionId(),
         event,
-        device: deviceClass(),
+        device: insightDeviceClass(),
         ...metadata,
       }).catch(() => {
         // Product analytics must never interrupt the assessment.
@@ -90,8 +90,8 @@ export function useProductInsights() {
       clarity?: ClarityRating;
     }) => {
       await feedbackMutation( {
-        sessionId: sessionId(),
-        device: deviceClass(),
+        sessionId: insightSessionId(),
+        device: insightDeviceClass(),
         ...input,
       });
     },
@@ -100,8 +100,8 @@ export function useProductInsights() {
 
   const markMapCompleted = useCallback(async () => {
     return await completeMutation( {
-      sessionId: sessionId(),
-      device: deviceClass(),
+      sessionId: insightSessionId(),
+      device: insightDeviceClass(),
     });
   }, [completeMutation]);
 
